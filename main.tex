@@ -1,0 +1,1111 @@
+% !TEX TS-program = xelatex
+\documentclass[12pt,a4paper,oneside,openany]{report}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}[Scale=MatchLowercase]
+\usepackage[english,russian]{babel}
+\usepackage{geometry}
+\geometry{left=3cm,right=1.5cm,top=2cm,bottom=2cm}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{microtype}
+\usepackage{pdflscape}
+\usepackage{makecell}
+\usepackage{etoolbox}
+\raggedbottom
+\sloppy
+
+\addto\captionsrussian{%
+  \renewcommand{\contentsname}{Содержание}%
+  \renewcommand{\bibname}{Список литературы}%
+  \renewcommand{\figurename}{Рисунок}%
+  \renewcommand{\tablename}{Таблица}%
+}
+
+\definecolor{codebg}{RGB}{247,247,247}
+\definecolor{codeborder}{RGB}{190,190,190}
+\definecolor{darkblue}{RGB}{25,55,95}
+\definecolor{darkgreen}{RGB}{30,100,70}
+\definecolor{darkred}{RGB}{140,50,50}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{darkblue},
+  commentstyle=\itshape\color{darkgreen},
+  stringstyle=\color{darkred},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  frame=single,
+  rulecolor=\color{codeborder},
+  backgroundcolor=\color{codebg},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2,
+  captionpos=b,
+  showstringspaces=false
+}
+\lstset{style=cppstyle}
+
+\titleformat{\chapter}[hang]{\bfseries\fontsize{16}{18}\selectfont}{\thechapter.}{0.7em}{}
+\titleformat{\section}[hang]{\bfseries\fontsize{14}{16}\selectfont}{\thesection}{0.7em}{}
+\titleformat{\subsection}[hang]{\bfseries\fontsize{13}{15}\selectfont}{\thesubsection}{0.7em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{12pt}
+\titlespacing*{\section}{0pt}{10pt}{6pt}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
+
+\captionsetup{font=small,labelfont=bf,justification=centering}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\setlength{\cftbeforechapskip}{4pt}
+\setlength{\cftbeforesecskip}{1pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\important}[1]{\textbf{#1}}
+\newcommand{\roi}{\mathrm{ROI}}
+\newcommand{\ms}{\mathrm{ms}}
+
+\begin{document}
+
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{center}
+\textbf{Национальный исследовательский университет «Высшая школа экономики»}\\
+\textbf{Факультет информатики, математики и компьютерных наук}\\
+\textbf{Образовательная программа «Прикладная математика и информатика»}\\[2.0cm]
+
+\textbf{ВЫПУСКНАЯ КВАЛИФИКАЦИОННАЯ РАБОТА}\\[0.8cm]
+
+\textbf{на тему:}\\[0.4cm]
+\textbf{«Оптимизация качества облачного видеостриминга в условиях ограниченности вычислительных ресурсов с применением классических эвристических методов и подходов на основе машинного обучения»}\\[2.0cm]
+\end{center}
+
+\begin{flushright}
+Выполнил: студент 4 курса\\
+Паршин Даниил Денисович\\[0.5cm]
+Научный руководитель:\\
+Колданов П. А.\\[0.5cm]
+Соруководитель:\\
+Жизлина В. Г.\\
+\end{flushright}
+
+\vfill
+\begin{center}
+Нижний Новгород, 2026
+\end{center}
+\end{titlepage}
+\setcounter{page}{2}
+
+\chapter*{Аннотация}
+\addcontentsline{toc}{chapter}{Аннотация}
+В выпускной квалификационной работе рассматривается задача повышения воспринимаемого качества облачного видеостриминга при ограниченных вычислительных ресурсах. Предлагаемый подход основан на выделении областей интереса в кадре и передаче их кодировщику как приоритетных зон. Центральным инженерным результатом является библиотека IDet --- CPU-first C++ слой для формирования ROI, объединяющий три режима анализа: текстовые области, лица и текстурированные области одежды и материалов. Для текстовых областей рассматривается семейство DBNet/DBNet++, для лиц --- семейство SCRFD, для текстурированных областей подготовлен отдельный детектор на базе YOLO и воспроизводимый конвейер подготовки данных, обучения и описания контракта экспорта модели.
+
+Работа фокусируется не на изолированной точности одной нейросетевой модели, а на архитектуре библиотеки, жизненном цикле обработки кадра, унификации результатов разных детекторов, управлении буферами, политике потоков, формировании списка RichROI и преобразовании ROI-приоритетов в управляющие подсказки для кодировщика. Дополнительно описан generic YOLO pipeline, включая согласование таксономии DeepFashion2 и Fashionpedia, аудит датасета, обучение детектора текстурированных областей и контракт экспорта PT-модели в ONNX-артефакт для последующего CPU-инференса через ONNX Runtime.
+
+\textbf{Ключевые слова:} облачный видеостриминг; ROI-кодирование; видеокодирование; IDet; CPU inference; ONNX Runtime; DBNet; SCRFD; YOLO; DeepFashion2; Fashionpedia; textured ROI; VMAF; SSIM.
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\chapter*{Введение}
+\addcontentsline{toc}{chapter}{Введение}
+\important{Актуальность темы.} Облачный видеостриминг является одним из наиболее ресурсоемких классов мультимедийных систем. В реальном сервисе качество видео ограничивается не только скоростью сети пользователя, но и вычислительной стоимостью транскодирования, задержкой доставки, пропускной способностью инфраструктуры, типом кодировщика и сложностью видеоконтента. Классические алгоритмы адаптивного выбора битрейта решают часть проблемы на уровне сегментов видео, подбирая представление потока во времени \cite{bola,pensieve}. Однако они практически не отвечают на вопрос о том, как распределять качество внутри одного кадра.
+
+В пользовательском восприятии кадр не является равномерным. Для лекций, стримов, блогерского контента, обзоров товаров и видеоконференций особенно важны лица, текстовые элементы, субтитры, интерфейсные надписи и детали одежды или материала. Если кодировщик чрезмерно сглаживает лицо, делает текст нечитаемым или уничтожает фактуру одежды, субъективное качество снижается даже при приемлемом среднем битрейте. Поэтому в данной работе видео рассматривается не как однородная сетка пикселей, а как набор областей с различной зрительной ценностью.
+
+\important{Идея работы} состоит в построении ROI-aware конвейера: сначала на кадре выделяются значимые области, затем они стабилизируются во времени, после чего передаются кодировщику как области с более высоким приоритетом. Такой подход не отменяет классическое видеокодирование и не заменяет ABR-логику, а дополняет их на пространственном уровне. При этом задача становится инженерно сложной: ROI-детекция должна быть достаточно быстрой, чтобы не уничтожить выигрыш от более рационального распределения битов.
+
+\important{Практическая основа работы} --- библиотека IDet \cite{idet}, спроектированная как CPU-first C++ слой детекции и унификации ROI для real-time pipeline. В архитектуре библиотеки текстовые области могут обрабатываться адаптерами семейства DBNet/DBNet++ \cite{dbnet,dbnetpp}, лица --- адаптерами семейства SCRFD \cite{scrfd}, а текстурированные области --- отдельным YOLO-детектором. Дополнительным инженерным артефактом является generic YOLO training pipeline \cite{pipeline}: он отвечает за подготовку датасетов, перевод в YOLO-формат, аудит качества разметки, объединение таксономий, обучение, построение отчетов и экспорт обученной PT-модели в deployable ONNX-артефакт \cite{ultra_export,ultra_onnx}.
+
+\important{Цель работы} --- разработать и обосновать инженерно-научный подход к повышению воспринимаемого качества облачного видеостриминга за счет выделения и защиты ROI в условиях ограниченного CPU-бюджета.
+
+Для достижения цели поставлены следующие задачи:
+\begin{enumerate}[label=\arabic*)]
+  \item проанализировать задачу облачного видеостриминга и ограничения, возникающие при транскодировании видео;
+  \item формализовать задачу ROI-aware оптимизации качества как задачу распределения вычислительных и битовых ресурсов;
+  \item разработать трехрежимную архитектуру ROI-детекции: текст, лицо, текстурированные области;
+  \item описать IDet как практическую CPU-oriented библиотеку для детекции и формирования ROI;
+  \item подготовить YOLO-детектор текстурированных ROI на общей таксономии DeepFashion2 и Fashionpedia;
+  \item сравнить отдельные и объединенные датасеты, выявить дисбаланс классов и свойства геометрии bbox;
+  \item обосновать выбор YOLO26n как компромисса между точностью и задержкой;
+  \item предложить схему интеграции ROI с кодировщиком через qoffset/ROI metadata и fallback-режимы;
+  \item сформировать протокол экспериментальной оценки качества, скорости и устойчивости системы.
+\end{enumerate}
+
+\important{Объект исследования} --- облачный конвейер видеостриминга и транскодирования. \important{Предмет исследования} --- методы выделения и использования областей интереса для повышения воспринимаемого качества видео при ограниченных вычислительных ресурсах.
+
+\important{Научно-практическая новизна} работы заключается в том, что ROI-детекция рассматривается не как самостоятельная задача компьютерного зрения, а как элемент системной оптимизации видеокодирования. В отличие от сценария, где модель оценивается только по mAP, здесь качество модели анализируется вместе с latency, memory footprint, предсказуемостью pre/post-processing и способностью работать внутри CPU-first C++ библиотеки.
+
+\chapter{Предметная область и постановка задачи}
+\section{Облачный видеостриминг как задача распределения ресурсов}
+Облачный видеостриминг строится вокруг компромисса между качеством, стоимостью и задержкой. В простейшей постановке платформа получает исходный видеопоток, транскодирует его в несколько представлений и доставляет пользователю версию, соответствующую текущим сетевым условиям. На практике этот процесс дополняется ограничениями инфраструктуры: количество параллельных потоков, CPU/GPU budget, стоимость хранения, требования к latency и устойчивость качества на разных устройствах.
+
+Классические ABR-алгоритмы, такие как BOLA \cite{bola}, и learning-based подходы, такие как Pensieve \cite{pensieve}, оптимизируют выбор битрейта во времени. Их цель --- выбрать сегмент нужного качества, не допустить rebuffering и сохранить стабильность воспроизведения. Но даже идеальный выбор битрейта не гарантирует, что кодировщик правильно распределит качество внутри кадра. На одном и том же битрейте можно сохранить фон и потерять лицо, либо наоборот защитить лицо и текст, пожертвовав малозначимыми областями.
+
+Видеокодеки H.264/AVC и HEVC/H.265 основаны на блочной структуре, предсказании, преобразовании, квантовании и энтропийному кодированию \cite{h264,hevc,vatolin,itmo_compression}. Потери качества в основном связаны с квантованием, поэтому управление параметром квантования становится естественной точкой воздействия. Если некоторая область кадра важнее остальных, то для нее можно использовать меньший QP или отрицательный qoffset. Именно такая идея лежит в основе ROI-aware кодирования.
+
+\section{Почему глобальные метрики недостаточны}
+Общие метрики качества, такие как PSNR, SSIM \cite{ssim}, VMAF \cite{vmaf} и LPIPS \cite{lpips}, полезны для сравнения кодеков и режимов кодирования, но они не всегда отражают пользовательское восприятие локальных дефектов. Если кодировщик ухудшил небольшую область с лицом или текстом, глобальная метрика может измениться мало, но пользователь заметит деградацию сразу.
+
+Поэтому для данной работы важен переход от глобального качества к ROI-weighted quality. Пусть кадр содержит множество областей $R_i$ с весами $w_i$, отражающими их perceptual importance. Тогда агрегированное качество можно записать как
+\begin{equation}
+Q_{\roi}(F) = \frac{\sum_{i=1}^{N} w_i \cdot Q(F|_{R_i})}{\sum_{i=1}^{N} w_i},
+\label{eq:roi_quality}
+\end{equation}
+где $F|_{R_i}$ означает фрагмент кадра внутри области $R_i$, а $Q(\cdot)$ --- локальная метрика качества. Такая формула не заменяет VMAF или SSIM, а задает способ интерпретировать их в привязке к областям интереса.
+
+\section{Три режима ROI в предлагаемой системе}
+В итоговой архитектуре IDet рассматривается как библиотека, поддерживающая три режима ROI:
+\begin{enumerate}[label=\arabic*)]
+  \item \important{text ROI} --- области текста, субтитров, интерфейса и мелких надписей;
+  \item \important{face ROI} --- лица ведущих, участников и людей, доминирующих в кадре;
+  \item \important{textured ROI} --- области одежды, ткани, ворса, декоративных поверхностей и других структур, потеря которых ухудшает воспринимаемую детализацию.
+\end{enumerate}
+
+Текстовая ветка опирается на идею сегментационной детекции текста. DBNet встраивает дифференцируемую бинаризацию в модель, что уменьшает зависимость от внешней постобработки и делает метод удобным для потокового сценария \cite{dbnet}. DBNet++ развивает этот подход за счет adaptive scale fusion, что полезно для текста разных размеров и пропорций \cite{dbnetpp}. Ветвь лиц основана на SCRFD: это семейство детекторов проектировалось как эффективный компромисс точности и вычислительной стоимости за счет перераспределения обучающих примеров и вычислений между частями модели \cite{scrfd}. Третья ветка добавляет textured ROI: она не заменяет text/face detection, а закрывает область, для которой готовых универсальных решений в контексте ROI-кодирования недостаточно.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{fig01_architecture_three_modes.pdf}
+\caption{Архитектура IDet: единый ROI extraction layer объединяет text ROI, face ROI и textured ROI, после чего формирует приоритеты для кодировщика.}
+\label{fig:architecture}
+\end{figure}
+
+\chapter{Формальная постановка задачи ROI-aware оптимизации}
+\section{Ограниченная оптимизация качества}
+В работе задача улучшения качества видео формулируется как ограниченная оптимизация. Пусть $B$ --- доступный битрейт, $T$ --- допустимая задержка анализа кадра, $C$ --- вычислительный бюджет, $\theta$ --- параметры ROI-детектора и политики кодирования. Тогда целевую постановку можно записать так:
+\begin{equation}
+\max_{\theta} \; \mathbb{E}\left[ Q_{\roi}(F; \theta) \right]
+\quad
+\text{при условиях}\quad
+R(F;\theta) \leq B, \quad L(F;\theta) \leq T, \quad C(F;\theta) \leq C_{\max}.
+\label{eq:constrained_opt}
+\end{equation}
+Здесь $R$ --- фактический расход битрейта, $L$ --- задержка обработки кадра, $C$ --- стоимость вычислений, а $Q_{\roi}$ --- ROI-взвешенное качество. В отличие от лабораторной постановки, где можно максимизировать только mAP, в данной работе важна системная метрика: улучшение качества должно быть достигнуто без выхода за latency budget.
+
+\section{Бюджет площади ROI}
+Если защищать слишком большую часть кадра, кодировщик потеряет возможность перераспределять биты. Поэтому вводится ограничение на долю защищенной площади:
+\begin{equation}
+\frac{\left|\bigcup_{i=1}^{N} R_i\right|}{|F|} \leq \alpha,
+\label{eq:area_budget}
+\end{equation}
+где $\alpha$ --- максимально допустимая доля кадра, например $0.15$--$0.35$ в зависимости от типа контента. Это ограничение принципиально важно для практического стриминга: ROI-aware кодирование не должно превращаться в кодирование всего кадра с повышенным качеством.
+
+\section{Временная стабильность ROI}
+Для видео важна не только точность областей в отдельном кадре, но и их стабильность во времени. Если ROI резко прыгает между соседними кадрами, это может привести к мерцанию качества. Для сглаживания confidence используется рекуррентная формула
+\begin{equation}
+\hat{s}_{t} = \lambda \hat{s}_{t-1} + (1-\lambda) s_t,
+\label{eq:smoothing}
+\end{equation}
+где $s_t$ --- текущая уверенность детектора, $\hat{s}_t$ --- сглаженная уверенность, $\lambda \in [0,1]$ --- коэффициент памяти. Дополнительно можно ввести штраф за нестабильность:
+\begin{equation}
+P_{flicker} = \frac{1}{T-1}\sum_{t=2}^{T} \left(1 - \operatorname{IoU}(R_t, R_{t-1})\right).
+\label{eq:flicker}
+\end{equation}
+Чем выше $P_{flicker}$, тем сильнее меняется ROI между кадрами и тем выше риск визуального мерцания.
+
+\section{От ROI к qoffset кодировщика}
+FFmpeg предоставляет структуру \texttt{AVRegionOfInterest}, где область задается координатами и параметром \texttt{qoffset}; отрицательное значение qoffset означает повышение качества кодирования внутри ROI \cite{ffmpeg_roi}. На уровне фильтров аналогичная идея доступна через \texttt{addroi}: фильтр не изменяет пиксели кадра, а прикрепляет к нему metadata об областях интереса для последующего кодирования \cite{ffmpeg_addroi}. Упрощенная формула преобразования приоритета $p_i$ в смещение QP может быть записана как
+\begin{equation}
+\Delta QP_i = -\gamma \cdot p_i \cdot (QP_{\max} - QP_{\min}),
+\label{eq:qoffset}
+\end{equation}
+где $p_i \in [0,1]$ --- нормированный приоритет области, а $\gamma$ --- коэффициент силы защиты. Формула~\eqref{eq:qoffset} не навязывает конкретную реализацию кодировщика, но описывает общий принцип: чем важнее область, тем сильнее отрицательное смещение QP.
+
+\section{Метрики детекции}
+Для модели textured ROI используются стандартные метрики object detection: precision, recall, F1, AP, mAP@0.5 и mAP@0.5:0.95 \cite{ultra_metrics}. Они вычисляются по формулам
+\begin{equation}
+Precision = \frac{TP}{TP + FP}, \qquad Recall = \frac{TP}{TP + FN},
+\label{eq:precision_recall}
+\end{equation}
+\begin{equation}
+F_1 = 2\cdot \frac{Precision\cdot Recall}{Precision + Recall}.
+\label{eq:f1}
+\end{equation}
+В контексте ROI-задачи recall особенно важен: пропуск значимой области одежды хуже, чем неточная классификация типа одежды, потому что цель детектора текстурированных ROI --- не модная аналитика, а защита визуально богатой области от агрессивного сжатия.
+
+\chapter{Проектирование IDet и трехрежимного ROI-конвейера}
+\section{IDet как инженерное ядро работы}
+IDet --- это CPU-first C++ библиотека для детекции, нормализации и ранжирования областей интереса \cite{idet}. В данной работе она рассматривается как центральный инженерный результат: задача библиотеки состоит не в том, чтобы обучить единственную модель, а в том, чтобы связать несколько специализированных детекторов с видеокодировщиком через общий контракт RichROI. Такой дизайн отделяет компьютерное зрение от политики кодирования и делает систему расширяемой: можно заменить модель текста, лиц или текстурированных областей, не меняя формат передачи приоритетов кодировщику.
+
+Архитектурно IDet опирается на несколько принципов. Во-первых, критический путь должен работать на CPU без Python-зависимости, поскольку облачный transcoding часто выполняется на CPU-пулах или в средах, где GPU является дорогим и разделяемым ресурсом. Во-вторых, модели должны приводиться к deployable формату ONNX, а инференс должен выполняться через ONNX Runtime \cite{onnx,onnxruntime}. В-третьих, графы моделей должны проходить оптимизацию: ONNX Runtime поддерживает уровни graph optimizations и online/offline режимы, что позволяет отделить подготовку артефакта от исполнения в сервисе \cite{ort_graph_optim}. В-четвертых, входные и выходные буферы должны быть переиспользуемыми; механизм I/O Binding в ONNX Runtime позволяет заранее связать входы и выходы с нужным размещением и уменьшить количество копирований \cite{ort_iobinding}.
+
+\begin{table}[H]
+\centering
+\caption{Основные модули библиотеки IDet}
+\label{tab:idet_modules}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}p{0.24\linewidth}Y@{}}
+\toprule
+Модуль & Ответственность & Выходной результат \\
+\midrule
+Frame input layer & Прием кадра, проверка формата, масштабирование и подготовка рабочего представления. & Нормализованный кадр или набор плиток. \\
+Preprocessing layer & Letterbox, resize, нормализация каналов, преобразование layout и заполнение входных tensor buffers. & Готовые входные буферы для ONNX Runtime. \\
+Model adapters & Обертки над text, face и texture detectors; скрывают формат выходов конкретной модели. & Сырые кандидаты: box, score, class/kind. \\
+Post-processing layer & Thresholding, декодирование координат, NMS, stitching плиток и обратное преобразование координат. & Кандидаты ROI в координатах исходного кадра. \\
+ROI manager & Нормализация к RichROI, приоритеты, конфликтующие области, area cap и temporal smoothing. & Упорядоченный список RichROI. \\
+Encoder adapter & Преобразование RichROI в qoffset/ROI metadata или fallback-политику. & Encoder guidance для видеокодировщика. \\
+Benchmark layer & Измерение latency, числа ROI, площади ROI, числа аллокаций и стабильности результатов. & p50/p95/p99, отчеты и диагностические метрики. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{fig02_idet_runtime_pipeline.pdf}
+\caption{Runtime path IDet для одного кадра: декодирование, предобработка, CPU-инференс, постобработка и формирование списка RichROI.}
+\label{fig:idet_runtime}
+\end{figure}
+
+\section{Жизненный цикл обработки кадра}
+Жизненный цикл кадра в IDet начинается до запуска нейросетевой модели. Сначала система получает кадр в исходном разрешении, проверяет формат пикселей и выбирает режим обработки: полный кадр, downscale, tiled inference или повторное использование ROI с предыдущего кадра. Затем выполняется предобработка, включая letterbox/resize и приведение данных к формату, ожидаемому конкретной ONNX-моделью.
+
+После инференса каждый adapter декодирует выходы своей модели. Текстовый adapter преобразует сегментационную или polygon-like выдачу в прямоугольные ROI текста; face adapter формирует прямоугольники лиц; textured adapter декодирует YOLO-кандидаты и выполняет NMS. На следующем этапе все результаты приводятся к единому формату RichROI, после чего ROI manager сортирует области по типу и приоритету, ограничивает суммарную площадь и применяет временное сглаживание. Последним шагом encoder adapter переводит список RichROI в qoffset или другой backend-specific hint.
+
+\begin{table}[H]
+\centering
+\caption{Жизненный цикл кадра в IDet}
+\label{tab:frame_lifecycle}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.08\linewidth}p{0.26\linewidth}Y@{}}
+\toprule
+Шаг & Этап & Смысл этапа \\
+\midrule
+1 & Frame acquisition & Получение кадра и фиксация его размеров, timestamp и pixel format. \\
+2 & Work plan & Выбор режима обработки: полный кадр, плитки, пропуск тяжелого детектора или перенос ROI. \\
+3 & Preprocessing & Подготовка входных буферов: resize/letterbox, нормализация, layout conversion. \\
+4 & Inference & Выполнение одной или нескольких ONNX Runtime sessions с контролируемым числом потоков. \\
+5 & Model post-processing & Декодирование выходов моделей, thresholding, NMS, stitching и обратное масштабирование координат. \\
+6 & ROI fusion & Приведение к RichROI, сортировка, слияние пересечений, area cap и temporal smoothing. \\
+7 & Encoder guidance & Преобразование ROI в qoffset/side data или fallback-параметры кодировщика. \\
+8 & Telemetry & Запись latency, числа ROI, площади ROI и диагностической информации. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Ответственность адаптеров детекторов}
+Adapter в IDet отвечает за преобразование конкретной модели в общий контракт библиотеки. Он не должен принимать решения о том, какие ROI важнее для кодировщика; это ответственность ROI manager. Такой принцип уменьшает связность: модель текста может быть заменена с DBNet на DBNet++, модель лиц --- на другую SCRFD-конфигурацию, а детектор текстурированных ROI --- на более тяжелую YOLO-модель без изменения downstream-слоя.
+
+\begin{table}[H]
+\centering
+\caption{Ответственность адаптеров IDet}
+\label{tab:adapter_responsibilities}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.23\linewidth}p{0.30\linewidth}Y@{}}
+\toprule
+Adapter & Внутренняя ответственность & Что не входит в ответственность \\
+\midrule
+Text adapter & Предобработка под DBNet/DBNet++, декодирование text maps, polygon/box extraction, фильтрация по confidence. & Глобальный приоритет текста относительно лица и textured ROI. \\
+Face adapter & Resize/normalize под SCRFD, декодирование anchors/candidates, NMS лиц, нормализация confidence. & Решение о qoffset и ограничение общей площади ROI. \\
+Texture adapter & YOLO-preprocessing, декодирование box/class outputs, NMS, remap координат из letterbox-пространства. & Интерпретация классов одежды как политик кодирования. \\
+Encoder adapter & Преобразование RichROI в FFmpeg ROI side data, qoffset-map или fallback-параметры. & Запуск детекторов и изменение outputs моделей. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Представление ROI}
+Для унификации трех режимов используется структура \texttt{RichROI}. Она хранит геометрию области, тип, confidence, приоритет и рекомендуемое смещение QP. Такое представление не зависит от конкретной модели: текстовый детектор, детектор лиц и YOLO-детектор текстурированных ROI могут возвращать разные сырые outputs, но на уровне кодировщика все они преобразуются в общий формат.
+
+\begin{table}[H]
+\centering
+\caption{Алгоритмический контракт RichROI}
+\label{tab:rich_roi_contract}
+\begin{tabularx}{\linewidth}{@{}p{0.26\linewidth}Y@{}}
+\toprule
+Поле & Назначение \\
+\midrule
+\texttt{box} & Прямоугольная область кадра в координатах исходного изображения. \\
+\texttt{kind} & Тип ROI: text, face, texture или fallback-region. \\
+\texttt{confidence} & Уверенность детектора, нормированная в диапазоне $[0,1]$. \\
+\texttt{priority} & Интегральный приоритет после учета типа области, confidence, площади и временной устойчивости. \\
+\texttt{areaShare} & Доля кадра, занимаемая областью; используется для area cap. \\
+\texttt{qoffsetHint} & Рекомендуемое смещение качества для кодировщика или encoder adapter. \\
+\texttt{timestamp} & Индекс кадра или временная метка, используемая для сглаживания ROI во времени. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Владение буферами и горячий путь}
+Для real-time видеостриминга важна не только средняя задержка, но и устойчивость p95/p99. Динамические аллокации в критическом пути приводят к джиттеру: отдельные кадры внезапно обрабатываются дольше из-за выделения памяти, освобождения памяти или переразмещения контейнеров. Поэтому IDet должен использовать явную модель владения буферами.
+
+\begin{table}[H]
+\centering
+\caption{Модель владения буферами в IDet}
+\label{tab:buffer_ownership}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.24\linewidth}p{0.24\linewidth}Y@{}}
+\toprule
+Буфер & Владелец & Правило использования \\
+\midrule
+Decoded frame & Frame input layer & Только чтение после получения кадра; исходное изображение не меняется детекторами. \\
+Preprocessed input & Preprocessing layer & Переиспользуется между кадрами одного размера; заполняется перед inference. \\
+ONNX input/output tensors & Inference backend & Выделяются при инициализации session или при смене input shape. \\
+Candidate arrays & Model adapter & Очищаются и переиспользуются; вместимость растет только вне hot path. \\
+NMS workspace & Post-processing layer & Общий временный буфер для сортировки и подавления кандидатов. \\
+RichROI list & ROI manager & Финальный список областей, передаваемый encoder adapter и telemetry layer. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Приоритеты и разрешение конфликтов}
+В системе вводится иерархия приоритетов: текст $>$ лицо $>$ textured ROI $>$ фон. Текст получает максимальный приоритет, потому что даже небольшие артефакты делают его нечитаемым. Лицо получает высокий приоритет из-за чувствительности пользователя к искажениям человеческой внешности. Текстурированные поверхности получают средний приоритет: они важны для субъективной детализации, но не должны вытеснять лицо и текст.
+
+\begin{table}[H]
+\centering
+\caption{Алгоритм слияния ROI}
+\label{tab:roi_fusion_algorithm}
+\begin{tabularx}{\linewidth}{@{}p{0.08\linewidth}Y@{}}
+\toprule
+Шаг & Действие \\
+\midrule
+1 & Получить кандидаты ROI от text adapter, face adapter и texture adapter. \\
+2 & Нормировать координаты, confidence и тип области к общему контракту RichROI. \\
+3 & Удалить кандидаты с confidence ниже порога, зависящего от типа ROI. \\
+4 & Отсортировать ROI по приоритету: text $>$ face $>$ texture $>$ background. \\
+5 & Объединить сильно пересекающиеся области с учетом IoU и типа области. \\
+6 & Ограничить суммарную защищаемую площадь кадра заданным area budget. \\
+7 & Применить temporal smoothing к координатам и confidence для уменьшения flickering. \\
+8 & Вернуть упорядоченный список RichROI для encoder adapter. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Политика потоков}
+IDet должен контролировать два уровня параллелизма: внешний уровень обработки кадров/плиток и внутренний уровень потоков ONNX Runtime. Если оба уровня включены без ограничений, возникает oversubscription: несколько пулов потоков конкурируют за одни и те же CPU-ядра, что ухудшает p95/p99 latency. Поэтому политика потоков должна задаваться явно и быть частью конфигурации, а не побочным эффектом backend.
+
+\begin{table}[H]
+\centering
+\caption{Политика потоков в IDet}
+\label{tab:threading_policy}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.23\linewidth}p{0.27\linewidth}Y@{}}
+\toprule
+Уровень & Настраиваемый параметр & Инженерный смысл \\
+\midrule
+Frame-level parallelism & Число одновременно обрабатываемых кадров. & Увеличивает throughput, но может ухудшить latency отдельного кадра. \\
+Tile-level parallelism & Число плиток, обрабатываемых параллельно. & Полезно для крупных кадров, но требует аккуратного stitching. \\
+ORT intra-op threads & Число потоков внутри оператора ONNX Runtime. & Влияет на скорость сверточных и матричных операций. \\
+ORT inter-op threads & Параллелизм между независимыми узлами графа. & Эффективен не для всех моделей; требует профилирования. \\
+Detector sampling rate & Частота запуска каждой ветки ROI. & Позволяет запускать тяжелые детекторы реже и переносить ROI во времени. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Интеграция с кодировщиком}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig15_encoder_mapping.pdf}
+\caption{Преобразование списка RichROI в encoder guidance: ограничение площади, сортировка, qoffset mapping и передача ROI side data.}
+\label{fig:encoder_mapping}
+\end{figure}
+
+Интеграционный слой должен быть отделен от детекторов. Модель не должна знать, работает ли кодировщик через FFmpeg ROI metadata, adaptive quantization или через fallback-предобработку фона. FFmpeg \texttt{addroi} прикрепляет к кадру metadata об областях интереса, не изменяя пиксели самого кадра, а \texttt{AVRegionOfInterest} задает координаты и qoffset для таких областей \cite{ffmpeg_addroi,ffmpeg_roi}. Это делает encoder adapter естественной границей между компьютерным зрением и кодированием.
+
+\begin{table}[H]
+\centering
+\caption{Алгоритмический контракт encoder adapter}
+\label{tab:encoder_adapter_contract}
+\begin{tabularx}{\linewidth}{@{}p{0.23\linewidth}Y@{}}
+\toprule
+Операция & Семантика \\
+\midrule
+\texttt{supportsROI} & Проверить, может ли целевой backend принять ROI side data или qoffset-map. \\
+\texttt{mapPriority} & Преобразовать приоритет RichROI в qoffset или эквивалентный encoder hint. \\
+\texttt{applyHints} & Передать кодировщику список ROI после ограничения площади и сортировки. \\
+\texttt{fallback} & При отсутствии native ROI support применить альтернативную стратегию: сглаживание фона или conservative AQ settings. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Этот adapter позволяет сохранить модульность: IDet отвечает за поиск областей, ROI manager --- за слияние и стабилизацию, encoder adapter --- за конкретный способ влияния на кодирование.
+
+\chapter{Детектор текстурированных ROI: данные, обучение и экспорт}
+\section{Мотивация детекции текстурированных ROI}
+ROI-aware видеокодирование часто связывают с лицами и текстом, поскольку эти области имеют очевидную семантическую ценность. Однако в пользовательском видео существенную часть ощущения резкости формируют текстуры: одежда ведущего, ткань, ворс, узор, мелкие регулярные структуры и декоративные поверхности. При сильном сжатии такие области теряют высокочастотные детали и превращаются в сглаженные пятна. Поэтому textured ROI рассматривается как третий режим IDet: он не конкурирует с text ROI и face ROI, а расширяет систему на визуально богатые области, для которых трудно задать простые эвристики.
+
+Для этой ветки используется объектный детектор семейства YOLO, обученный на согласованной таксономии одежды. Выбор объектного детектора, а не общей saliency-модели, связан с инженерной управляемостью: bbox легко преобразовать в ROI кодировщика, ошибки можно анализировать через AP и confusion matrix, а latency можно профилировать на CPU.
+
+\section{Конвейер подготовки и обучения YOLO-модели}
+Для обучения детектора текстурированных ROI используется отдельный проект generic YOLO training pipeline \cite{pipeline}. Его задача --- обеспечить полный цикл подготовки и проверки модели: конвертацию датасетов, согласование таксономии, проверку файлов, аудит bbox-геометрии, построение статистики, запуск обучения, оценку и экспорт deployable артефактов. Поддержка ONNX-экспорта важна, поскольку Ultralytics рассматривает export mode как основной путь переноса обученной модели в форматы для deployment, включая ONNX \cite{ultra_export,ultra_onnx}. Логика pipeline представлена на рисунке~\ref{fig:generic_pipeline}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{fig03_generic_yolo_pipeline.pdf}
+\caption{Generic YOLO pipeline для детектора текстурированных ROI: подготовка датасетов, согласование таксономии, обучение, оценка и этап экспорта PT-to-ONNX.}
+\label{fig:generic_pipeline}
+\end{figure}
+
+Использовались два исходных датасета: DeepFashion2 и Fashionpedia. DeepFashion2 содержит изображения одежды с аннотациями для detection, segmentation, landmarks и retrieval \cite{deepfashion2}. Fashionpedia построена вокруг fashion ontology и содержит категории одежды, части одежды и fine-grained attributes \cite{fashionpedia}. Оба датасета были переведены в YOLO-формат, после чего из исходных таксономий выделены 7 ключевых классов, согласованных между источниками.
+
+\section{Контракт PT-to-ONNX артефакта}
+Отдельным модулем generic YOLO pipeline является stage экспорта обученной PT-модели в ONNX. Этот этап нужен не для отчетности, а для замыкания цикла между обучением и IDet: библиотека не должна зависеть от Python training framework, поэтому в runtime передается стабильный ONNX-артефакт с известной формой входа, набором выходов и настройками оптимизации. В ONNX Runtime такой артефакт может дополнительно проходить graph optimizations, включая устранение лишних узлов, fusion операций и оптимизации layout в зависимости от выбранного уровня \cite{ort_graph_optim}.
+
+\begin{table}[H]
+\centering
+\caption{Контракт PT-to-ONNX артефакта для детектора текстурированных ROI}
+\label{tab:pt_to_onnx_contract}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}Y@{}}
+\toprule
+Элемент контракта & Требование \\
+\midrule
+Входной артефакт & Файл \texttt{best.pt}, полученный после обучения YOLO-модели на согласованной таксономии. \\
+Экспортируемый формат & ONNX model artifact, совместимый с ONNX Runtime CPU Execution Provider. \\
+Размер входа & Фиксированный или явно задокументированный dynamic input shape; размер должен совпадать с preprocessing в IDet. \\
+Параметры экспорта & \texttt{format=onnx}, выбранный \texttt{opset}, режим \texttt{dynamic}, \texttt{simplify}, batch size и флаг встроенного NMS фиксируются в отчете pipeline. \\
+Проверка корректности & Сравнение выходов PT и ONNX на калибровочных изображениях: shape, диапазоны confidence, число кандидатов и близость координат. \\
+Проверка переносимости & Portable ONNX не должен содержать target-specific узлы ONNX Runtime layout optimization, например \texttt{com.microsoft.nchwc::Conv}; такие файлы допустимы только как отдельные ORT-optimized artifacts для конкретной машины. \\
+Оптимизация & Сохранение версии до оптимизации и версии после ORT graph optimization для воспроизводимого benchmark. \\
+Метаданные & Версия pipeline, дата экспорта, dataset yaml, names/classes, hash весов и параметры preprocessing. \\
+Интеграция & Артефакт регистрируется как texture adapter model и используется IDet без обращения к Python. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Единая 7-классовая таксономия}
+
+Целевая таксономия включает классы: \texttt{top\_sleeved}, \texttt{outerwear}, \texttt{top\_sleeveless}, \texttt{shorts}, \texttt{trousers}, \texttt{skirt}, \texttt{dress}. Выбор классов обусловлен задачей textured ROI: эти классы покрывают основные области одежды, которые чаще всего занимают значительную часть кадра и имеют воспринимаемую фактуру.
+
+\section{Аудит датасетов после конвертации}
+В таблице~\ref{tab:dataset_summary} приведена сводка по трем конфигурациям: DeepFashion2-7c, Fashionpedia-7c и объединенному DF2+FP-7c. Во всех случаях отсутствуют пустые label files, missing labels, orphan labels и unreadable images. Это является важным инженерным результатом: качество модели начинается не с архитектуры, а с корректности подготовленного корпуса.
+
+\begin{table}[H]
+\centering
+\caption{Сводная статистика датасетов после конвертации в YOLO-формат}
+\label{tab:dataset_summary}
+\small
+\begin{tabularx}{\linewidth}{lrrrrr}
+\toprule
+Датасет & Images & Instances & Train img & Val img & Test img \\
+\midrule
+DeepFashion2-7c & 224114 & 364675 & 179291 & 22411 & 22412 \\
+Fashionpedia-7c & 45445 & 74724 & 36356 & 4544 & 4545 \\
+DF2+FP-7c & 269559 & 439399 & 234516 & 32347 & 2696 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.84\linewidth]{fig04_dataset_scale.pdf}
+\caption{Сравнение масштаба датасетов после приведения к общей таксономии.}
+\label{fig:dataset_scale}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.84\linewidth]{fig05_split_distribution.pdf}
+\caption{Распределение изображений по train/val/test-разбиениям для DeepFashion2-7c, Fashionpedia-7c и объединенного DF2+FP-7c.}
+\label{fig:split_distribution}
+\end{figure}
+
+\section{Дисбаланс классов}
+Класс \texttt{top\_sleeved} доминирует во всех конфигурациях. В DeepFashion2-7c он составляет 126230 объектов, в Fashionpedia-7c --- 24803, а в merged DF2+FP-7c --- 151033. При этом в Fashionpedia-7c класс \texttt{top\_sleeveless} содержит только 741 объект, что создает сильный imbalance. После объединения редкие классы получают больше примеров, а отношение крупнейшего класса к минимальному становится существенно мягче.
+
+\begin{table}[H]
+\centering
+\caption{Распределение объектов по классам в объединенном датасете DF2+FP-7c}
+\label{tab:merged_classes}
+\small
+\begin{tabularx}{\linewidth}{lrrrr}
+\toprule
+Класс & Train & Val & Test & Total \\
+\midrule
+\texttt{top\_sleeved} & 132382 & 17116 & 1535 & 151033 \\
+\texttt{dress} & 67265 & 9833 & 813 & 77911 \\
+\texttt{trousers} & 67226 & 9631 & 844 & 77701 \\
+\texttt{shorts} & 36958 & 6203 & 484 & 43645 \\
+\texttt{skirt} & 35909 & 6163 & 493 & 42565 \\
+\texttt{outerwear} & 20407 & 4556 & 325 & 25288 \\
+\texttt{top\_sleeveless} & 17033 & 3925 & 298 & 21256 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{fig06_class_distribution.pdf}
+\caption{Распределение классов в DeepFashion2-7c, Fashionpedia-7c и DF2+FP-7c.}
+\label{fig:class_distribution}
+\end{figure}
+
+\section{Геометрия изображений и bbox}
+Fashion-домены имеют выраженную вертикальную ориентацию. Для DeepFashion2 средний размер изображения составляет примерно $602.5\times756.8$ на train split, для Fashionpedia --- $755.3\times986.1$, для merged --- $628.3\times795.7$. Центры bbox устойчиво находятся около центра кадра: для merged train средний bbox center равен $(0.5008, 0.5237)$, а средняя площадь bbox --- $0.2709$.
+
+Это свойство имеет два следствия. С одной стороны, модель может переобучиться на центральное расположение объектов. Поэтому при обучении применялись современные аугментации, особенно геометрические: shift, scale, perspective/affine transforms и mosaic-like augmentations \cite{ultra_aug}. С другой стороны, центральность bbox полезна для реального streaming-контента с человеком в кадре: одежда ведущего часто действительно находится в центральной области, а значит textured ROI можно стабилизировать во времени.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.84\linewidth]{fig07_bbox_area_composition.pdf}
+\caption{Состав bbox по размерным категориям. Объекты в основном medium/large, что соответствует задаче защиты крупных текстурированных областей.}
+\label{fig:bbox_area}
+\end{figure}
+
+\section{Режимы обучения}
+В работе рассматривались следующие режимы:
+\begin{enumerate}[label=\arabic*)]
+  \item обучение только на DeepFashion2-7c;
+  \item обучение только на Fashionpedia-7c;
+  \item transfer learning: DeepFashion2 $\rightarrow$ Fashionpedia;
+  \item обучение на объединенном DF2+FP-7c;
+  \item сравнение YOLO26n и YOLO26s.
+\end{enumerate}
+
+Итоговый выбор сделан в пользу YOLO26n на merged dataset. YOLO26s местами давал более высокие метрики, включая mAP@0.5:0.95 выше 0.84, но был тяжелее. Для ВКР важнее не абсолютный максимум mAP, а возможность интеграции в IDet с жестким CPU-бюджетом. Поэтому метрики обучения рассматриваются как первый уровень проверки; окончательный вывод о пригодности для real-time режима требует отдельного CPU-бенчмарка экспортированного ONNX-артефакта вместе с pre/post-processing.
+
+\chapter{Экспериментальные результаты YOLO26n на объединенном датасете DF2+FP-7c}
+\section{Граница экспериментальных выводов}
+В этой главе приведены результаты обучения и валидации YOLO26n как детектора текстурированных ROI. Эти результаты подтверждают качество object detection на подготовленной 7-классовой таксономии, но сами по себе не доказывают ускорение IDet и не доказывают рост качества видеокодирования. Для таких выводов нужны отдельные CPU-only прогоны ONNX Runtime с p50/p90/p95/p99 latency и отдельный эксперимент кодирования с одинаковым битрейтом. Такое разделение важно, потому что высокая mAP и низкая задержка полного ROI pipeline являются разными свойствами системы.
+
+\section{Аппаратная конфигурация}
+Обучение выполнялось на рабочей станции с NVIDIA RTX 4090 24GB, Intel Core i7-13700 и 64GB RAM. Такая конфигурация позволила запускать обучение YOLO26n/YOLO26s с тяжелыми аугментациями и большим merged dataset. RTX 4090 имеет 24 GB видеопамяти, что делает ее практичной для обучения современных моделей компьютерного зрения \cite{nvidia4090}.
+
+\begin{table}[H]
+\centering
+\caption{Аппаратная конфигурация обучения}
+\label{tab:hardware}
+\begin{tabularx}{\linewidth}{lY}
+\toprule
+Компонент & Значение \\
+\midrule
+GPU & NVIDIA RTX 4090, 24 GB VRAM \\
+CPU & Intel Core i7-13700 \\
+RAM & 64 GB \\
+Модели & YOLO26n, YOLO26s \\
+Выбранная модель & YOLO26n \\
+Критерий выбора & качество при минимальной вычислительной стоимости для CPU-first IDet \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Итоговые метрики}
+Итоговые метрики YOLO26n на merged DF2+FP-7c приведены в таблице~\ref{tab:yolo_metrics}. Модель достигла mAP@0.5 = 0.94 и mAP@0.5:0.95 = 0.82. С точки зрения object detection это сильный результат, особенно если учитывать, что модель выбрана как легкий вариант для последующей CPU-интеграции.
+
+\begin{table}[H]
+\centering
+\caption{Итоговые метрики YOLO26n на merged DF2+FP-7c}
+\label{tab:yolo_metrics}
+\begin{tabularx}{\linewidth}{lrY}
+\toprule
+Метрика & Значение & Интерпретация \\
+\midrule
+Precision & 0.932 & Модель редко создает ложные ROI. \\
+Recall & 0.862 & Модель находит большую часть релевантных областей. \\
+mAP@0.5 & 0.940 & Высокое качество при стандартном IoU-пороге. \\
+mAP@0.5:0.95 & 0.820 & Устойчивое качество при строгих порогах локализации. \\
+Best F1 & 0.890 при conf=0.409 & Рабочий confidence threshold для баланса precision/recall. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\linewidth]{fig08_yolo26n_final_metrics.pdf}
+\caption{Сводные метрики YOLO26n на объединенной 7-классовой таксономии.}
+\label{fig:yolo_metrics}
+\end{figure}
+
+\section{Поклассовая точность детектора}
+Поклассовая AP показывает, что модель наиболее уверенно распознает \texttt{trousers}, \texttt{dress}, \texttt{top\_sleeved}, \texttt{shorts} и \texttt{skirt}. Более сложными являются \texttt{top\_sleeveless} и \texttt{outerwear}. Это ожидаемо: \texttt{top\_sleeveless} является менее представленным и визуально близким к другим верхним классам, а \texttt{outerwear} часто пересекается с \texttt{top\_sleeved} и \texttt{dress}.
+
+\begin{table}[H]
+\centering
+\caption{Поклассовая AP@0.5 для YOLO26n}
+\label{tab:per_class_ap}
+\begin{tabularx}{\linewidth}{lr}
+\toprule
+Класс & AP@0.5 \\
+\midrule
+\texttt{top\_sleeved} & 0.962 \\
+\texttt{outerwear} & 0.909 \\
+\texttt{top\_sleeveless} & 0.895 \\
+\texttt{shorts} & 0.942 \\
+\texttt{trousers} & 0.969 \\
+\texttt{skirt} & 0.934 \\
+\texttt{dress} & 0.965 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\linewidth]{fig09_yolo26n_per_class_ap.pdf}
+\caption{Поклассовая AP@0.5 для детектора текстурированных ROI.}
+\label{fig:per_class_ap}
+\end{figure}
+
+\section{Кривые уверенности и precision-recall}
+На рисунках~\ref{fig:f1_curve}--\ref{fig:pr_curve} приведены восстановленные чистые версии графиков из training artifacts. F1-confidence curve показывает максимум $F_1=0.89$ при confidence threshold около $0.409$. Это значение можно использовать как начальную точку для offline evaluation, но для видеостриминга threshold может быть ниже, если требуется уменьшить пропуски textured ROI.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\linewidth]{fig10_f1_confidence.pdf}
+\caption{F1-confidence curve для YOLO26n.}
+\label{fig:f1_curve}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\linewidth]{fig11_precision_recall_confidence.pdf}
+\caption{Поведение precision и recall при изменении confidence threshold.}
+\label{fig:pr_conf_curve}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\linewidth]{fig12_precision_recall_curve.pdf}
+\caption{Precision-recall curves для классов merged DF2+FP-7c.}
+\label{fig:pr_curve}
+\end{figure}
+
+\section{Матрица ошибок}
+Нормализованная матрица ошибок показывает, что на диагонали модель имеет сильные значения: $0.92$ для \texttt{top\_sleeved}, $0.93$ для \texttt{trousers}, $0.92$ для \texttt{dress}. Более низкие значения у \texttt{top\_sleeveless} ($0.79$) и \texttt{outerwear} ($0.83$) объясняются визуальной близостью классов и дисбалансом данных.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\linewidth]{fig13_confusion_matrix.pdf}
+\caption{Нормализованная матрица ошибок YOLO26n.}
+\label{fig:confusion}
+\end{figure}
+
+Для задачи ROI proposal generation такие ошибки не критичны, если модель все равно выделяет область одежды. Классификация \texttt{outerwear} как \texttt{top\_sleeved} менее опасна, чем полный пропуск верхней части одежды: в обоих случаях область может быть защищена кодировщиком как textured ROI.
+
+\section{Почему выбран YOLO26n}
+Финальное инженерное решение --- выбрать YOLO26n, а не YOLO26s. YOLO26s имеет более высокую точность на части экспериментов, в частности mAP@0.5:0.95 выше 0.84, но он тяжелее. Цель ВКР --- не построить максимально точный fashion classifier, а получить модель, которую реалистично встроить в CPU-first IDet и затем проверить в режиме с ограниченным бюджетом на весь pre/post-processing. Поэтому YOLO26n является более обоснованным кандидатом для практической интеграции, а не окончательно доказанным fastest-вариантом без CPU-бенчмарка.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\linewidth]{fig14_quality_latency_tradeoff.pdf}
+\caption{Компромисс между качеством и целевым latency budget.}
+\label{fig:quality_latency}
+\end{figure}
+
+\chapter{Интеграция ROI в видеокодирование}
+\section{ROI как управляющий сигнал, а не конечный результат}
+В данной работе ROI-детектор не является финальным продуктом сам по себе. Его выход --- это управляющий сигнал для кодировщика. Поэтому оценивать систему нужно не только по detection metrics, но и по тому, как ROI влияет на итоговое качество видео при фиксированном битрейте.
+
+Пусть $S$ --- стратегия кодирования, $D$ --- ROI detector, $E$ --- encoder. Тогда полный конвейер можно записать как
+\begin{equation}
+\hat{V} = E(V, S(D(V))),
+\label{eq:pipeline}
+\end{equation}
+где $V$ --- исходное видео, $D(V)$ --- последовательность ROI, $S$ --- политика приоритизации и mapping в qoffset, $\hat{V}$ --- сжатый поток. Важно, что $D$ не оптимизируется изолированно; он должен быть полезен внутри $E$.
+
+\section{Политика qoffset}
+Для каждой ROI задается приоритет $p_i$. Сильнее всего защищается текст, затем лица, затем textured ROI. Практическая политика может быть задана таблицей~\ref{tab:qoffset_policy}.
+
+\begin{table}[H]
+\centering
+\caption{Пример политики приоритизации ROI}
+\label{tab:qoffset_policy}
+\begin{tabularx}{\linewidth}{lrrY}
+\toprule
+Тип ROI & Priority & qoffset & Причина \\
+\midrule
+Text ROI & 1.00 & -0.20 & Читаемость текста критична для пользователя. \\
+Face ROI & 0.85 & -0.15 & Искажения лица заметны субъективно. \\
+Textured ROI & 0.55 & -0.08 & Фактура повышает perceived sharpness, но не должна вытеснять текст/лицо. \\
+Background & 0.00 & 0.00 & Фон кодируется без дополнительной защиты. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Эти значения не являются универсальными константами; они задают начальную инженерную политику для экспериментов. В реальной системе qoffset следует подбирать на validation corpus с учетом битрейта, кодека и контента.
+
+\section{Fallback-режимы}
+Поддержка ROI metadata различается между кодировщиками и сборками FFmpeg/x265 \cite{ffmpeg_roi,x265}. Поэтому в работе предусматриваются fallback-режимы:
+\begin{enumerate}[label=\arabic*)]
+  \item использование native ROI metadata, если кодировщик поддерживает \texttt{AVRegionOfInterest};
+  \item настройка adaptive quantization и rate-control параметров;
+  \item слабая предобработка фона вне ROI для снижения его локальной сложности;
+  \item offline selection режим, где ROI используется только для анализа качества и построения отчетов.
+\end{enumerate}
+
+\section{Целевой эксперимент качества}
+Финальная проверка должна сравнивать не только detection metrics, но и качество закодированного видео. Минимальная матрица экспериментов приведена в таблице~\ref{tab:quality_experiments}.
+
+\begin{table}[H]
+\centering
+\caption{Матрица экспериментов ROI-aware кодирования}
+\label{tab:quality_experiments}
+\scriptsize
+\begin{tabularx}{\linewidth}{lccccY}
+\toprule
+Конфигурация & Text & Face & Texture & Ожидаемый эффект \\
+\midrule
+Baseline & нет & нет & нет & Равномерное кодирование без пространственного приоритета. \\
+Text-only & да & нет & нет & Рост читаемости текста и интерфейса. \\
+Face-only & нет & да & нет & Улучшение качества лиц. \\
+Text+Face & да & да & нет & Базовый semantic ROI режим. \\
+Full ROI & да & да & да & Защита текста, лиц и фактурированных областей. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Измеряться должны VMAF, SSIM, ROI-weighted SSIM/VMAF, bitrate deviation, latency, FPS и стабильность ROI. Такой протокол связывает научную часть с практическим продуктом.
+
+\chapter{Экспериментальная методика и критерии качества}
+На рисунке~\ref{fig:experiment_protocol} показан общий протокол оценки: все режимы сравниваются на одинаковых входных видео, при одинаковом битрейте и одинаковых настройках кодировщика; меняется только ROI-политика. Такой протокол нужен, чтобы не спутать эффект ROI с эффектом другого пресета кодирования.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{fig16_experiment_protocol.pdf}
+\caption{Экспериментальный протокол оценки ROI-aware кодирования.}
+\label{fig:experiment_protocol}
+\end{figure}
+
+\section{Метрики качества видео}
+SSIM оценивает структурное сходство изображений и является классической full-reference метрикой \cite{ssim}. В упрощенном виде SSIM для двух окон $x$ и $y$ записывается как
+\begin{equation}
+SSIM(x,y)=\frac{(2\mu_x\mu_y+C_1)(2\sigma_{xy}+C_2)}{(\mu_x^2+\mu_y^2+C_1)(\sigma_x^2+\sigma_y^2+C_2)}.
+\label{eq:ssim}
+\end{equation}
+VMAF объединяет несколько признаков качества и лучше согласуется с субъективным восприятием в ряде видеосценариев \cite{vmaf}. В данной работе VMAF рассматривается как основная глобальная метрика, а ROI-weighted SSIM/VMAF --- как дополнительная метрика для анализа локального улучшения.
+
+\section{Системные метрики}
+Так как цель работы --- не только качество, но и deployability, обязательны системные метрики:
+\begin{enumerate}[label=\arabic*)]
+  \item latency pre-processing;
+  \item latency inference;
+  \item latency post-processing;
+  \item суммарная задержка кадра;
+  \item p50/p90/p95/p99;
+  \item memory footprint;
+  \item FPS;
+  \item CPU utilization.
+\end{enumerate}
+
+Инженерная целевая точка для IDet --- $\leq 10\,\ms$ на кадр для всего ROI pipeline. Это соответствует примерно 100 FPS и оставляет некоторый бюджет для кодировщика и системной обвязки. Достижение этой точки должно проверяться отдельным benchmark-прогоном, а не выводиться из метрик обучения YOLO-модели.
+
+\section{Метрики покрытия ROI}
+Для оценки качества ROI в практическом pipeline недостаточно считать только число найденных областей. Конфигурация может вернуть много box-кандидатов, но при этом пропустить часть reference ROI или чрезмерно расширить защищаемую область. Поэтому для сравнения режимов IDet используется геометрическая оценка покрытия относительно reference-прогона. Reference boxes в этой постановке не являются ground truth-разметкой; это инженерный proxy, полученный более дорогой или более консервативной конфигурацией.
+
+Пусть $A_{ref}$ --- суммарная площадь reference boxes, $A_{cand}$ --- суммарная площадь candidate boxes, а $A_{\cap}$ --- площадь их пересечения после объединения областей. Тогда используются метрики:
+\begin{equation}
+area\_recall = \frac{A_{\cap}}{A_{ref}}, \qquad
+area\_precision = \frac{A_{\cap}}{A_{cand}},
+\label{eq:area_recall_precision}
+\end{equation}
+\begin{equation}
+area\_f1 =
+2 \cdot \frac{area\_recall \cdot area\_precision}
+{area\_recall + area\_precision},
+\label{eq:area_f1}
+\end{equation}
+\begin{equation}
+extra\_area\_ratio =
+\frac{A_{cand} - A_{\cap}}{A_{ref}}.
+\label{eq:extra_area_ratio}
+\end{equation}
+
+Метрика $area\_recall$ показывает, какая доля эталонной ROI-площади покрыта кандидатом, $area\_precision$ штрафует за раздутые ROI, $area\_f1$ балансирует покрытие и аккуратность, а $extra\_area\_ratio$ ограничивает лишнюю защищаемую площадь. В финальных таблицах performance-quality конфигурации должны сортироваться по $p99$ latency по возрастанию, а качество должно проверяться по ограничениям на $area\_recall$, $area\_precision$, $area\_f1$ и $extra\_area\_ratio$.
+
+\section{Дисциплина CPU-only benchmark}
+Для измерения IDet на CPU главным источником latency должны быть значения, которые печатает сам \texttt{idet\_app}: \texttt{p50\_ms}, \texttt{p90\_ms}, \texttt{p95\_ms} и \texttt{p99\_ms}. Время внешнего Python \texttt{subprocess} допустимо сохранять только как служебное поле, но не как latency модели или pipeline. Для чистого benchmark необходимо отключать отрисовку, dump и подробный вывод: \texttt{--is\_draw 0 --is\_dump 0 --verbose 0}.
+
+Финальные performance-выводы должны строиться только на release/perf-сборке без ASan/UBSan, поскольку санитайзеры меняют профиль памяти, futex/wait и распределение задержек. Для ARM/Kunpeng-прогонов дополнительно фиксируются число доступных CPU, NUMA-политика, параметры \texttt{threads\_intra}, \texttt{threads\_inter}, \texttt{tile\_omp}, режим \texttt{cpu\_placement}, memory binding и состояние automatic NUMA balancing. Если эти условия не зафиксированы, вывод о p99 latency следует считать ограниченным данным окружением.
+
+\section{Кривые качества и вычислительной стоимости}
+Для каждой конфигурации можно построить quality-cost curve:
+\begin{equation}
+\mathcal{C}(S) = \left( L(S), Q_{\roi}(S), R(S) \right),
+\label{eq:quality_cost}
+\end{equation}
+где $L$ --- задержка, $Q_{\roi}$ --- ROI-взвешенное качество, $R$ --- битрейт. Стратегия $S_1$ доминирует стратегию $S_2$, если
+\begin{equation}
+Q_{\roi}(S_1) \geq Q_{\roi}(S_2), \quad L(S_1) \leq L(S_2), \quad R(S_1) \leq R(S_2),
+\label{eq:pareto}
+\end{equation}
+и хотя бы одно неравенство строгое. Такой Pareto-анализ позволяет не сводить работу к одной метрике.
+
+\section{Абляционное исследование}
+Для доказательства полезности каждого компонента нужен ablation study. В частности, следует сравнить:
+\begin{enumerate}[label=\arabic*)]
+  \item без ROI;
+  \item только text ROI;
+  \item только face ROI;
+  \item только textured ROI;
+  \item text + face;
+  \item text + face + textured;
+  \item разные пороги confidence для YOLO26n;
+  \item разные ограничения $\alpha$ на площадь ROI;
+  \item разные значения qoffset для textured ROI;
+  \item native ROI metadata против fallback preprocessing.
+\end{enumerate}
+
+Такой протокол делает работу воспроизводимой и защищает ее от типичной слабости ML-проектов: наличия хорошей модели без понимания ее системного эффекта.
+
+\chapter{Инженерные ограничения, риски и практическая значимость}
+\section{Задержка как главный ограничитель}
+Главное отличие данной работы от обычного обучения YOLO-модели состоит в том, что модель должна жить внутри real-time pipeline. Если детектор текстурированных ROI улучшает mAP, но добавляет задержку, несовместимую с целевым режимом, он не подходит для архитектуры IDet. Поэтому YOLO26n выбран как компромиссный кандидат. Слабая модель может пропускать важные области, слишком тяжелая --- разрушить latency budget. Правильный выбор находится на границе качества и скорости и должен подтверждаться CPU-only benchmark, а не только метриками обучения.
+
+\section{Дисбаланс классов}
+DeepFashion2 и Fashionpedia имеют выраженный дисбаланс классов. В Fashionpedia-7c отношение крупнейшего класса к минимальному превышает 30x, а после объединения снижается примерно до 7x. Это объясняет, почему merged dataset предпочтителен для финальной модели. Но даже в merged dataset редкие классы требуют анализа per-class AP и confusion matrix, иначе слабые места будут скрыты общей mAP.
+
+\section{Центральное смещение объектов}
+На всех трех датасетах bbox centers концентрируются около центра кадра. Это естественно для fashion-изображений, но опасно для обобщения. Поэтому применялись геометрические аугментации. Для будущей версии системы полезно добавить тесты на нестандартных композициях: человек сбоку, крупный план ткани, движение камеры, частичное перекрытие одежды, несколько людей.
+
+\section{Риск ложных textured ROI}
+Детектор текстурированных ROI может выделять визуально сложный фон: ковры, стены, мебель, шумные поверхности. Это не всегда плохо, но может перераспределять биты в ненужные зоны. Поэтому textured ROI должен иметь меньший приоритет, чем text и face, а также ограничиваться budget cap по площади. Дополнительно можно использовать temporal persistence: область считается важной, если она сохраняется несколько кадров.
+
+\section{Практическая значимость}
+Практическая ценность работы состоит в создании архитектуры, которую можно постепенно довести до production-ready состояния. Уже существуют:
+\begin{enumerate}[label=\arabic*)]
+  \item IDet как CPU-oriented C++ база для детекции ROI;
+  \item generic YOLO training pipeline для подготовки и обучения моделей;
+  \item обученная YOLO26n модель textured ROI на merged DF2+FP-7c;
+  \item воспроизводимые dataset audits;
+  \item экспериментальный план для оценки quality-cost trade-off.
+\end{enumerate}
+
+Дальнейшие шаги включают проверенный ONNX/ORT экспорт YOLO26n, интеграцию в IDet, CPU benchmark с p50/p90/p95/p99, тестирование на видеопоследовательностях и сравнение качества кодирования с/без ROI.
+
+\chapter{Производственная интеграция и план развития IDet}
+\section{Почему детектор текстурированных ROI должен быть частью IDet}
+Отдельный скрипт обучения или инференса может показать хорошие метрики, но для ВКР этого недостаточно. Ценность textured ROI появляется только тогда, когда модель становится частью системного конвейера: получает кадры из видеопотока, работает в предсказуемом временном бюджете, возвращает унифицированные ROI, не ломает память процесса и может быть включена или отключена конфигурацией. Поэтому в данной работе детектор текстурированных ROI рассматривается как третий режим IDet на этапе производственной интеграции, а не как отдельный ML-эксперимент.
+
+С инженерной точки зрения это означает, что модель должна быть приведена к тому же контракту, что text adapter и детектор лиц. На входе она получает кадр или плитки кадра, на выходе возвращает список областей с confidence, classId и bounding box. Дальше все различия между моделями скрываются внутри адаптера. Такой подход позволяет не переписывать ROI fusion, temporal smoothing и encoder mapping при добавлении новых моделей. Именно поэтому общая структура \texttt{RichROI} и adapter-интерфейсы являются важнее, чем конкретная версия YOLO.
+
+\section{План интеграции YOLO26n для текстурированных ROI}
+Полная интеграция модели в IDet может быть выполнена поэтапно. Первый этап --- экспорт обученной модели в ONNX и проверка численного соответствия outputs между training framework и ONNX Runtime. Второй этап --- реализация препроцессинга в C++: letterbox, нормализация, преобразование layout, подготовка входного буфера. Третий этап --- post-processing: декодирование выходов, thresholding, NMS и преобразование координат из letterbox-пространства обратно в координаты исходного кадра. Четвертый этап --- подключение результата к общему ROI fusion.
+
+Ключевое требование состоит в том, чтобы pre/post-processing не оказался дороже самой нейросети. В object detection это типичная проблема: модель может выполняться быстро, но декодирование большого числа кандидатов, сортировка и NMS создают существенную задержку. Поэтому post-processing должен быть ограничен по числу кандидатов, использовать compact data structures и избегать лишних аллокаций. Для CPU-first реализации важно заранее выделять буферы под входы, выходы и промежуточные массивы.
+
+\begin{lstlisting}[caption={Алгоритмический контракт детектора текстурированных ROI внутри IDet},label={lst:textured_detector_contract}]
+class TexturedRoiDetector {
+public:
+    virtual ~TexturedRoiDetector() = default;
+
+    virtual void Configure(const DetectorConfig& config) = 0;
+    virtual void WarmUp() = 0;
+
+    virtual std::vector<RichROI> Detect(
+        const ImageView& frame,
+        ScratchBuffers& scratch) = 0;
+
+    virtual DetectorLatency LastLatency() const = 0;
+};
+\end{lstlisting}
+
+\section{Политика потоков при производственной интеграции}
+В IDet необходимо разделить два уровня параллелизма. Первый уровень --- внешний: параллельная обработка кадров или плиток. Второй уровень --- внутренний: потоки ONNX Runtime внутри inference session. Если оба уровня включены без контроля, возникает oversubscription: слишком много потоков конкурируют за одни и те же ядра CPU, что ухудшает p95/p99 latency. Поэтому библиотека должна явно задавать число потоков для preprocessing, inference и post-processing.
+
+Практический принцип состоит в следующем: для одного кадра с тремя ROI-режимами не нужно всегда запускать все модели одновременно. Если кадр похож на предыдущий, детектор текстурированных ROI можно вызывать раз в несколько кадров, а промежуточные ROI переносить через tracking/smoothing. Text ROI и face ROI также могут иметь разные частоты запуска. Это превращает систему из статической цепочки моделей в адаптивный конвейер, где тяжелые компоненты включаются с контролируемой частотой.
+
+\section{Профиль памяти и отсутствие динамических аллокаций в критическом пути}
+Для облачного сервиса важна не только средняя задержка, но и стабильность задержки. Один из источников нестабильности --- динамические аллокации памяти в горячем пути. Поэтому IDet должен стремиться к zero-allocation hot path: все крупные буферы выделяются заранее, а при обработке кадра переиспользуются. Это касается входных изображений, ONNX input tensors, выходных tensors, списков кандидатов, временных буферов NMS и результирующих ROI.
+
+Если обозначить число кандидатов после декодирования как $K$, а число итоговых ROI как $N$, то практическая сложность post-processing должна быть ограничена сверху. Наивный NMS имеет сложность $O(K^2)$, что опасно при большом числе кандидатов. Поэтому в реализации необходимо применять предварительную фильтрацию по confidence и top-k selection:
+\begin{equation}
+K' = \min(K_{conf}, K_{max}), \qquad K' \ll K.
+\label{eq:topk}
+\end{equation}
+После этого NMS выполняется по $K'$, а не по всем сырым кандидатам.
+
+\section{План CPU-бенчмарка}
+Для доказательства практической применимости textured ROI режима необходимо провести отдельный CPU benchmark. Он должен измерять не только среднее время, но и распределение задержек:
+\begin{equation}
+L_{total} = L_{pre} + L_{infer} + L_{post} + L_{fusion}.
+\label{eq:latency_decomposition}
+\end{equation}
+В отчете должны быть p50, p90, p95 и p99. Среднее значение может скрывать редкие пики, которые в real-time pipeline приводят к пропускам кадров. Целевой критерий данной работы --- приблизиться к $L_{total}\leq 10\,\ms$ на кадр для выбранной конфигурации CPU. Если полный трехрежимный pipeline не укладывается в этот бюджет на каждом кадре, применяется sampling strategy: textured ROI вычисляется не на каждом кадре, а через заданный интервал, а между вызовами области стабилизируются.
+
+\section{Связь с качеством видеокодирования}
+Даже идеальная ROI-детекция не гарантирует улучшения качества, если кодировщик не использует ROI корректно. Поэтому итоговая проверка должна включать два уровня. Первый уровень --- detection validation: mAP, precision, recall, confusion matrix. Второй уровень --- video coding validation: сравнение закодированных потоков при одинаковом битрейте. Только второй уровень отвечает на вопрос ВКР: действительно ли ROI-aware подход улучшает облачный видеостриминг.
+
+Возможен случай, когда textured ROI увеличивает качество одежды, но ухудшает фон. Это допустимо, если итоговое субъективное качество становится выше. Однако возможен и обратный случай: слишком много textured ROI заставляет кодировщик ухудшить лицо или текст. Поэтому textured ROI должен иметь меньший приоритет, чем face/text, и жесткое ограничение площади. В производственной системе параметры приоритетов должны подбираться по validation corpus.
+
+\section{Режимы эксплуатации}
+Предлагаемая система может работать в трех эксплуатационных режимах. Первый режим --- offline analysis: ROI используются только для оценки качества и построения отчетов. Второй режим --- assisted encoding: ROI передаются кодировщику при offline/nearline транскодировании, где допускается большая задержка. Третий режим --- real-time streaming: ROI вычисляются в жестком latency budget и используются в live/near-live кодировании. Для ВКР наиболее важен третий режим, но первые два полезны как этапы валидации.
+
+\begin{table}[H]
+\centering
+\caption{Режимы эксплуатации ROI-aware системы}
+\label{tab:deployment_modes}
+\begin{tabularx}{\linewidth}{lYYY}
+\toprule
+Режим & Цель & Ограничения & Роль textured ROI \\
+\midrule
+Offline analysis & Проверка качества и отчетность & Нет жесткого latency & Анализ влияния одежды/фактуры на метрики. \\
+Assisted encoding & Улучшение VoD/nearline транскодирования & Умеренный latency & Полноценное ROI metadata для кодировщика. \\
+Real-time streaming & Live/interactive pipeline & $\leq 10$ мс на кадр для ROI layer & Sampling, smoothing, strict area cap. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Научный аспект: текстурированные ROI как приближение к perceptual saliency}
+Textured ROI не является полной saliency model. Тем не менее он приближает один важный аспект зрительного восприятия: чувствительность к потере мелкой структуры. Классические saliency-aware методы пытаются предсказать, куда смотрит пользователь \cite{saliency_video}. Textured ROI решает более узкую и инженерно управляемую задачу: найти области, где высокочастотная структура является частью смыслового объекта. Одежда ведущего, узор, ворс и ткань не всегда являются самым важным объектом, но их деградация часто воспринимается как потеря резкости всей картинки.
+
+Такое сужение задачи делает систему более практичной. Вместо общей saliency prediction, которая может быть нестабильной и трудно интерпретируемой, используется объектный детектор с понятной таксономией. Его ошибки легче анализировать через confusion matrix и per-class AP. Его outputs естественно переводятся в rectangular ROI. Его latency можно измерить и оптимизировать в C++.
+
+\section{Инженерный аспект: преимущество объединенной таксономии}
+Использование только DeepFashion2 дает большой объем данных, но объекты в нем чаще крупные и хорошо центрированные. Использование только Fashionpedia дает более разнообразную fashion ontology, но сильнее страдает от дисбаланса и меньшего объема. Объединенная таксономия DF2+FP дает компромисс: большой корпус, все 7 классов активны, редкие классы получают больше примеров, а геометрия bbox становится более разнообразной.
+
+С точки зрения обученной модели это важно: детектор текстурированных ROI должен работать не только на идеальных fashion-фотографиях, но и на видеокадрах, где одежда частично закрыта, движется, размывается или занимает нестандартную часть кадра. Поэтому merged dataset является более сильной практической базой, чем любой из датасетов по отдельности.
+
+
+\section{Ограничения валидности и требования к финальным экспериментам}
+Несмотря на высокие метрики YOLO26n, результаты обучения детектора текстурированных ROI нельзя автоматически считать доказательством улучшения видеостриминга. Детектор отвечает только за выделение областей, а итоговый пользовательский эффект возникает после кодирования. Поэтому финальная экспериментальная часть должна разделять две гипотезы. Первая гипотеза: модель достаточно надежно находит одежду и текстурированные области на кадрах, близких к streaming-контенту. Вторая гипотеза: передача этих областей кодировщику действительно повышает воспринимаемое качество при том же битрейте. Эти гипотезы связаны, но не эквивалентны.
+
+Особенно важно контролировать domain shift. DeepFashion2 и Fashionpedia состоят из fashion-изображений, тогда как реальный видеостриминг включает motion blur, interlacing/resize artifacts, шум веб-камеры, неидеальное освещение, неполные фигуры, кадры с несколькими людьми и сильную компрессию до обработки. Поэтому в следующем этапе необходимо сформировать небольшой видеокорпус из реальных сценариев: talking-head, лекция с субтитрами, product review, live-stream fragment и видеоконференция. На этом корпусе следует проверить не только mAP, но и устойчивость ROI во времени.
+
+Еще одно ограничение связано с тем, что модель обучена на прямоугольных bbox классов одежды. Для кодировщика прямоугольник является удобным форматом, но он может включать фон вокруг одежды. Если ROI слишком широкая, часть битов уйдет не на текстуру, а на окружающие области. Это решается двумя способами: более строгим clipping после NMS и ограничением площади ROI. В перспективе можно рассмотреть mask-based textured ROI, но для CPU-first версии прямоугольные ROI остаются более простым и дешевым решением.
+
+Наконец, нужно учитывать, что высокий recall может быть важнее высокой precision. Если детектор текстурированных ROI ошибочно выделит небольшую лишнюю область, система потеряет часть битового бюджета. Если же он пропустит важную область одежды, пользователь увидит потерю детализации. Поэтому threshold в производственном режиме может отличаться от F1-optimal threshold. Для real-time кодирования допустимо работать в точке, где recall выше, но площадь ROI ограничена отдельным area cap. Такой дизайн отражает практическую природу работы: модель не классифицирует моду, а помогает кодировщику принять более разумное решение о распределении качества.
+
+\chapter*{Заключение}
+\addcontentsline{toc}{chapter}{Заключение}
+В работе рассмотрена задача оптимизации воспринимаемого качества облачного видеостриминга в условиях ограниченных вычислительных ресурсов. Предложенный подход основан на ROI-aware обработке: система выделяет текст, лица и текстурированные области, нормализует результаты разных детекторов в общий формат RichROI и передает кодировщику компактный управляющий сигнал.
+
+Центральным результатом является архитектура библиотеки IDet. Библиотека рассматривается как CPU-first слой между компьютерным зрением и видеокодированием: она описывает жизненный цикл кадра, границы ответственности адаптеров, модель владения буферами, политику потоков, слияние ROI и преобразование приоритетов в encoder guidance. Такой подход важен для облачного сценария, где качество модели должно оцениваться вместе с задержкой, предсказуемостью памяти и возможностью интеграции в C++ pipeline.
+
+Для третьего режима IDet подготовлен детектор текстурированных ROI на базе YOLO26n и воспроизводимый generic YOLO pipeline. Конвейер переводит DeepFashion2 и Fashionpedia в YOLO-формат, приводит их к общей 7-классовой таксономии, выполняет аудит данных, формирует отчеты, а также задает контракт экспорта PT-модели в ONNX-артефакт для последующего исполнения через ONNX Runtime. Экспериментальная часть подтверждает качество детекции выбранной легкой модели на объединенной 7-классовой таксономии; вывод о real-time пригодности должен дополнительно подтверждаться CPU-only бенчмарком полного IDet pipeline.
+
+Научная составляющая работы состоит в формализации ROI-aware видеокодирования как ограниченной оптимизационной задачи, введении ROI-weighted качества, анализе area budget, temporal smoothing, qoffset mapping и метрик детекции в контексте видеокодирования. Практическая составляющая состоит в проектировании библиотеки IDet, подготовке textured ROI detector, описании deployment-контракта и формировании протокола оценки качества и задержки.
+
+Итоговая архитектура не заменяет ABR-логику и не является самостоятельным кодировщиком. Она дополняет существующий видеоконвейер пространственным уровнем принятия решений: какие области кадра необходимо защищать в первую очередь и как передать эту информацию кодировщику. Именно это делает работу не только ML-экспериментом, но и инженерной ВКР о проектировании воспроизводимого ROI extraction layer для ресурсно-ограниченного облачного видеостриминга. Основное ограничение текущих результатов состоит в том, что качество кодирования и p99 latency полного CPU-only конвейера должны быть подтверждены отдельными финальными прогонами на целевом окружении.
+
+
+\clearpage
+\addcontentsline{toc}{chapter}{Список литературы}
+\begin{thebibliography}{35}
+\bibitem{bola} Spiteri K., Urgaonkar R., Sitaraman R. K. BOLA: Near-Optimal Bitrate Adaptation for Online Videos. IEEE INFOCOM, 2016.
+\bibitem{pensieve} Mao H., Netravali R., Alizadeh M. Neural Adaptive Video Streaming with Pensieve. ACM SIGCOMM, 2017.
+
+\bibitem{ssim} Wang Z., Bovik A. C., Sheikh H. R., Simoncelli E. P. Image Quality Assessment: From Error Visibility to Structural Similarity. IEEE Transactions on Image Processing, 2004.
+\bibitem{vmaf} Netflix. VMAF: Video Multi-Method Assessment Fusion. URL: \url{https://github.com/Netflix/vmaf}.
+\bibitem{lpips} Zhang R., Isola P., Efros A. A., Shechtman E., Wang O. The Unreasonable Effectiveness of Deep Features as a Perceptual Metric. CVPR, 2018.
+
+\bibitem{h264} Wiegand T., Sullivan G. J., Bjøntegaard G., Luthra A. Overview of the H.264/AVC Video Coding Standard. IEEE Transactions on Circuits and Systems for Video Technology, 2003.
+\bibitem{hevc} ITU-T. Recommendation H.265: High Efficiency Video Coding. URL: \url{https://www.itu.int/rec/T-REC-H.265}.
+\bibitem{vatolin} Ватолин Д. С. Сжатие видео. H.264. Лекции лаборатории компьютерной графики и мультимедиа МГУ, 2005.
+\bibitem{itmo_compression} Университет ИТМО. Методы сжатия изображений, аудиосигналов и видео: учебное пособие, 2009.
+\bibitem{ffmpeg_roi} FFmpeg Developers. AVRegionOfInterest Struct Reference. URL: \url{https://ffmpeg.org/doxygen/4.3/structAVRegionOfInterest.html}.
+\bibitem{ffmpeg_addroi} FFmpeg Filters Documentation. addroi video filter. URL: \url{https://ayosec.github.io/ffmpeg-filters-docs/8.0/Filters/Video/addroi.html}.
+\bibitem{x265} x265 Project. Command Line Options. URL: \url{https://x265.readthedocs.io/en/stable/cli.html}.
+
+\bibitem{dbnet} Liao M., Wan Z., Yao C., Chen K., Bai X. Real-time Scene Text Detection with Differentiable Binarization. AAAI, 2020. URL: \url{https://arxiv.org/abs/1911.08947}.
+\bibitem{dbnetpp} Liao M., Zou Z., Wan Z., Yao C., Bai X. Real-Time Scene Text Detection with Differentiable Binarization and Adaptive Scale Fusion. IEEE TPAMI, 2022. URL: \url{https://arxiv.org/abs/2202.10304}.
+\bibitem{scrfd} Guo J., Deng J., Lattas A., Zafeiriou S. Sample and Computation Redistribution for Efficient Face Detection. ICLR, 2022. URL: \url{https://arxiv.org/abs/2105.04714}.
+
+\bibitem{onnx} Bai J. et al. ONNX: Open Neural Network Exchange. URL: \url{https://onnx.ai/}.
+\bibitem{onnxruntime} ONNX Runtime Documentation. URL: \url{https://onnxruntime.ai/docs/}.
+\bibitem{ort_iobinding} ONNX Runtime. I/O Binding for Performance. URL: \url{https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html}.
+\bibitem{ort_graph_optim} ONNX Runtime. Graph Optimizations. URL: \url{https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html}.
+\bibitem{ultra_export} Ultralytics. Model Export with Ultralytics YOLO. URL: \url{https://docs.ultralytics.com/modes/export/}.
+\bibitem{ultra_onnx} Ultralytics. ONNX Export for YOLO Models. URL: \url{https://docs.ultralytics.com/integrations/onnx/}.
+\bibitem{ultra_metrics} Ultralytics. YOLO Performance Metrics. URL: \url{https://docs.ultralytics.com/guides/yolo-performance-metrics/}.
+\bibitem{ultra_aug} Ultralytics. Data Augmentation using Ultralytics YOLO. URL: \url{https://docs.ultralytics.com/guides/yolo-data-augmentation/}.
+
+\bibitem{deepfashion2} Ge Y., Zhang R., Wu L., Wang X., Tang X., Luo P. DeepFashion2: A Versatile Benchmark for Detection, Pose Estimation, Segmentation and Re-Identification of Clothing Images. CVPR, 2019.
+\bibitem{fashionpedia} Jia M., Shi M., Sirotenko M., Cui Y., Cardie C., Hariharan B., Adam H., Belongie S. Fashionpedia: Ontology, Segmentation, and an Attribute Localization Dataset. ECCV, 2020.
+
+\bibitem{saliency_video} Hadizadeh H., Bajić I. V. Saliency-Aware Video Compression. IEEE Transactions on Image Processing, 2014.
+\bibitem{nvidia4090} NVIDIA. GeForce RTX 4090 specifications. URL: \url{https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/}.
+
+\bibitem{idet} Parshin D. IDet: CPU-only C++ library for text/face/clothing detection and ROI pipelines. URL: \url{https://github.com/De-Par/IDet}.
+\bibitem{pipeline} Parshin D. Generic YOLO training pipeline. URL: \url{https://github.com/De-Par/yolo-training-pipeline}.
+\end{thebibliography}
+
+
+\appendix
+\chapter{Дополнительные таблицы экспериментов}
+\section{Сравнение датасетов}
+\begin{table}[H]
+\centering
+\caption{Расширенная сводка dataset audit}
+\scriptsize
+\begin{tabularx}{\linewidth}{lrrrrrr}
+\toprule
+Датасет & Images & Instances & Inst/img & Classes & Empty & Invalid \\
+\midrule
+DeepFashion2-7c & 224114 & 364675 & 1.6272 & 7/7 & 0 & 0 \\
+Fashionpedia-7c & 45445 & 74724 & 1.6443 & 7/7 & 0 & 0 \\
+DF2+FP-7c & 269559 & 439399 & 1.6301 & 7/7 & 0 & 0 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Конфигурация C++ эксперимента}
+\begin{lstlisting}[caption={Алгоритмическая структура конфигурации эксперимента},label={lst:experiment_config}]
+struct ExperimentConfig {
+    std::string datasetName;
+    std::string modelName;
+    std::string encoderName;
+    int inputSize;
+    int batchSize;
+    int cpuThreads;
+    float confidenceThreshold;
+    float iouThreshold;
+    float maxRoiAreaFraction;
+    bool enableTextRoi;
+    bool enableFaceRoi;
+    bool enableTexturedRoi;
+};
+\end{lstlisting}
+
+\section{Целевая процедура benchmark}
+\begin{lstlisting}[caption={Алгоритмический C++ benchmark-конвейер},label={lst:benchmark_loop}]
+BenchmarkResult RunVideoBenchmark(
+    const VideoStream& stream,
+    const IDetPipeline& detector,
+    EncoderRoiAdapter& encoder,
+    const ExperimentConfig& cfg) {
+
+    LatencyTracker latency;
+    QualityTracker quality;
+
+    for (Frame frame : stream) {
+        Timer totalTimer;
+
+        std::vector<RichROI> rois = detector.Detect(frame);
+        std::vector<RichROI> stable = StabilizeRois(rois, cfg);
+
+        if (encoder.SupportsNativeRoi()) {
+            encoder.AttachRoiMetadata(frame, stable);
+        } else {
+            encoder.ApplyFallbackPreprocessing(frame, stable);
+        }
+
+        EncodedFrame encoded = Encode(frame, cfg.encoderName);
+        latency.Add(totalTimer.ElapsedMilliseconds());
+        quality.Add(CompareWithReference(frame, encoded, stable));
+    }
+
+    return BuildBenchmarkReport(latency, quality);
+}
+\end{lstlisting}
+
+\end{document}
