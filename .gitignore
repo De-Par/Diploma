@@ -1,8 +1,4 @@
-*
-!HOWTO.md
-!LICENSE
-!figures
-!.gitignore
-!.latexmkrc
-!main.tex
-!build.sh
+.DS_Store
+.vscode
+artefacts/
+data/
