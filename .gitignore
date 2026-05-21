@@ -1,4 +1,26 @@
 .DS_Store
-.vscode
-artefacts/
 data/
+artefacts/
+
+# Editor / IDE state
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# LaTeX build products outside artefacts/
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+
+# OS metadata
+Thumbs.db
