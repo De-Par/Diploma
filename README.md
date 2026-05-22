@@ -31,12 +31,12 @@ The final quantitative evaluation of encoded video quality with and without ROI 
 ├── build.sh                  # reproducible XeLaTeX/latexmk build script
 ├── figures/                  # figures, diagrams, and plots used by the thesis
 │   ├── appendix/
-│   ├── ch03-architecture/
-│   ├── ch04-datasets/
-│   ├── ch05-yolo-results/
-│   ├── ch07-performance/
-│   ├── ch08-profiling/
-│   └── ch09-video-quality/
+│   ├── architecture/
+│   ├── datasets/
+│   ├── performance/
+│   ├── profiling/
+│   ├── video-quality/
+│   └── yolo/
 ├── .latexmkrc
 └── .gitignore
 ```
@@ -163,4 +163,3 @@ This repository is prepared as a public thesis repository:
 ## Authorship and Usage
 
 The thesis text, figures, and compiled PDF are published as educational and research material. All rights to the text and formatting are reserved by the author.
-
