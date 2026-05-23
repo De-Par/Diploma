@@ -26,8 +26,8 @@ The final quantitative evaluation of encoded video quality with and without ROI 
 
 ```text
 .
-├── main.tex                  # main LaTeX source
-├── main.pdf                  # compiled thesis PDF
+├── diploma.tex               # main LaTeX source
+├── diploma.pdf               # compiled thesis PDF
 ├── build.sh                  # reproducible XeLaTeX/latexmk build script
 ├── figures/                  # figures, diagrams, and plots used by the thesis
 │   ├── appendix/
@@ -59,7 +59,7 @@ The local `data/` directory with raw experimental materials is not part of the p
 
 ## Building the PDF
 
-The document must be built with XeLaTeX because `main.tex` uses `fontspec` and the system fonts Times New Roman, Arial, and Courier New. Building with `pdflatex` is not supported.
+The document must be built with XeLaTeX because `diploma.tex` uses `fontspec` and the system fonts Times New Roman, Arial, and Courier New. Building with `pdflatex` is not supported.
 
 Quick start:
 
@@ -71,7 +71,7 @@ chmod +x ./build.sh
 After a successful build, the final PDF is placed in the repository root:
 
 ```text
-main.pdf
+diploma.pdf
 ```
 
 Auxiliary LaTeX files are placed in `artefacts/`. This directory is ignored by Git.
@@ -134,28 +134,28 @@ Equivalent manual build command:
 
 ```bash
 mkdir -p artefacts
-latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts main.tex
-mv artefacts/main.pdf main.pdf
+latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
+mv artefacts/diploma.pdf diploma.pdf
 ```
 
 On macOS, if locale issues occur:
 
 ```bash
-env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts main.tex
+env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
 ```
 
 On Linux, `C.UTF-8` is usually suitable:
 
 ```bash
-env LANG=C.UTF-8 LC_ALL=C.UTF-8 latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts main.tex
+env LANG=C.UTF-8 LC_ALL=C.UTF-8 latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
 ```
 
 ## Publication Status
 
 This repository is prepared as a public thesis repository:
 
-- `main.tex` and `figures/` are sufficient to rebuild the document;
-- `main.pdf` is included as the compiled result;
+- `diploma.tex` and `figures/` are sufficient to rebuild the document;
+- `diploma.pdf` is included as the compiled result;
 - local experimental data, editor settings, and LaTeX build artifacts are excluded from Git;
 - experimental claims in the thesis are based on available summary data, training reports, benchmark tables, and profiling artifacts;
 - the baseline vs ROI-aware video quality section is written as a methodology section without unsupported numerical claims.

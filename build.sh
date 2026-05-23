@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOC_NAME="main"
+DOC_NAME="diploma"
 TEX_FILE="${DOC_NAME}.tex"
 PDF_FILE="${DOC_NAME}.pdf"
 ARTEFACTS_DIR="${ROOT_DIR}/artefacts"
