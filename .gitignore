@@ -22,5 +22,9 @@ artefacts/
 *.toc
 *.xdv
 
+# Optional generated PDF variants
+diploma_compressed.pdf
+diploma_nodownsample.pdf
+
 # OS metadata
 Thumbs.db
