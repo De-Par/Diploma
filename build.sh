@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOC_NAME="diploma"
 TEX_FILE="${DOC_NAME}.tex"
 PDF_FILE="${DOC_NAME}.pdf"
+COMPRESSED_PDF_FILE="${DOC_NAME}_compressed.pdf"
 ARTEFACTS_DIR="${ROOT_DIR}/artefacts"
 
 cd "${ROOT_DIR}"
@@ -44,6 +45,7 @@ mkdir -p "${ARTEFACTS_DIR}"
 
 latexmk \
   -xelatex \
+  -g \
   -synctex=1 \
   -interaction=nonstopmode \
   -file-line-error \
@@ -55,7 +57,7 @@ if [[ ! -s "${ARTEFACTS_DIR}/${PDF_FILE}" ]]; then
   exit 1
 fi
 
-mv -f "${ARTEFACTS_DIR}/${PDF_FILE}" "${ROOT_DIR}/${PDF_FILE}"
+cp -f "${ARTEFACTS_DIR}/${PDF_FILE}" "${ROOT_DIR}/${PDF_FILE}"
 
 shopt -s nullglob
 for file in "${ROOT_DIR}/${DOC_NAME}".*; do
@@ -98,3 +100,51 @@ else
 fi
 
 echo "Build artefacts are in ${ARTEFACTS_DIR}."
+
+if [[ "${COMPRESS_PDF:-1}" == "1" ]]; then
+  if command -v gs >/dev/null 2>&1; then
+    compressed_tmp="${ARTEFACTS_DIR}/${COMPRESSED_PDF_FILE}.tmp"
+    compressed_out="${ROOT_DIR}/${COMPRESSED_PDF_FILE}"
+    rm -f "${compressed_tmp}"
+
+    gs \
+      -sDEVICE=pdfwrite \
+      -dCompatibilityLevel=1.5 \
+      -dNOPAUSE \
+      -dQUIET \
+      -dBATCH \
+      -dDetectDuplicateImages=true \
+      -dCompressFonts=true \
+      -dSubsetFonts=true \
+      -dDownsampleColorImages=false \
+      -dDownsampleGrayImages=false \
+      -dDownsampleMonoImages=false \
+      -sOutputFile="${compressed_tmp}" \
+      "${ROOT_DIR}/${PDF_FILE}"
+
+    if [[ ! -s "${compressed_tmp}" ]]; then
+      echo "ERROR: Ghostscript did not produce ${COMPRESSED_PDF_FILE}." >&2
+      exit 1
+    fi
+
+    if command -v pdfinfo >/dev/null 2>&1; then
+      compressed_pages="$(pdfinfo "${compressed_tmp}" | awk '/^Pages:/ {print $2}')"
+      if [[ "${compressed_pages}" != "${pages:-}" ]]; then
+        echo "ERROR: compressed PDF page count (${compressed_pages:-unknown}) differs from ${PDF_FILE} (${pages:-unknown})." >&2
+        exit 1
+      fi
+    elif [[ "$(head -c 5 "${compressed_tmp}")" != "%PDF-" ]]; then
+      echo "ERROR: ${COMPRESSED_PDF_FILE} does not look like a PDF file." >&2
+      exit 1
+    fi
+
+    mv -f "${compressed_tmp}" "${compressed_out}"
+    compressed_size="$(wc -c < "${compressed_out}" | tr -d '[:space:]')"
+    echo "OK: compressed ${COMPRESSED_PDF_FILE} (${compressed_size} bytes)."
+  else
+    echo "WARN: Ghostscript is not installed; skipping ${COMPRESSED_PDF_FILE}."
+    echo "      Install 'ghostscript' on Linux or 'brew install ghostscript' on macOS."
+  fi
+else
+  echo "Skipping PDF compression because COMPRESS_PDF=${COMPRESS_PDF}."
+fi
