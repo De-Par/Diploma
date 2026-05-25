@@ -28,6 +28,7 @@ The final quantitative evaluation of encoded video quality with and without ROI 
 .
 ├── diploma.tex               # main LaTeX source
 ├── diploma.pdf               # compiled thesis PDF
+├── diploma_compressed.pdf    # optional compressed PDF generated when Ghostscript is available
 ├── build.sh                  # reproducible XeLaTeX/latexmk build script
 ├── figures/                  # figures, diagrams, and plots used by the thesis
 │   ├── appendix/
@@ -74,6 +75,15 @@ After a successful build, the final PDF is placed in the repository root:
 diploma.pdf
 ```
 
+If Ghostscript is available, `build.sh` also writes a compressed copy:
+
+```text
+diploma_compressed.pdf
+```
+
+The compressed copy is produced as a separate file and does not replace `diploma.pdf`.
+Disable this step with `COMPRESS_PDF=0 ./build.sh`.
+
 Auxiliary LaTeX files are placed in `artefacts/`. This directory is ignored by Git.
 
 ## Dependencies
@@ -85,12 +95,13 @@ Required tools:
 - TeX Live packages for standard LaTeX, Cyrillic support, tables, graphics, and `fontspec`;
 - Times New Roman, Arial, and Courier New system fonts;
 - `pdfinfo` from `poppler` is recommended for page-count validation in `build.sh`.
+- `ghostscript` is optional; when installed, `build.sh` generates `diploma_compressed.pdf`.
 
 ### macOS
 
 ```bash
 brew install --cask mactex-no-gui
-brew install poppler
+brew install poppler ghostscript
 ```
 
 If TeX Live is not visible in `PATH`:
@@ -111,6 +122,7 @@ sudo apt install -y \
   texlive-latex-extra \
   texlive-fonts-recommended \
   poppler-utils \
+  ghostscript \
   fontconfig
 ```
 
@@ -134,8 +146,26 @@ Equivalent manual build command:
 
 ```bash
 mkdir -p artefacts
-latexmk -xelatex -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
-mv artefacts/diploma.pdf diploma.pdf
+latexmk -xelatex -g -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
+cp artefacts/diploma.pdf diploma.pdf
+```
+
+Optional Ghostscript compression, matching `build.sh`:
+
+```bash
+gs -sDEVICE=pdfwrite \
+  -dCompatibilityLevel=1.5 \
+  -dNOPAUSE \
+  -dQUIET \
+  -dBATCH \
+  -dDetectDuplicateImages=true \
+  -dCompressFonts=true \
+  -dSubsetFonts=true \
+  -dDownsampleColorImages=false \
+  -dDownsampleGrayImages=false \
+  -dDownsampleMonoImages=false \
+  -sOutputFile=diploma_compressed.pdf \
+  diploma.pdf
 ```
 
 On macOS, if locale issues occur:
