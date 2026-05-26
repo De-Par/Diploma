@@ -119,6 +119,9 @@ if [[ "${COMPRESS_PDF:-1}" == "1" ]]; then
       -dDownsampleColorImages=false \
       -dDownsampleGrayImages=false \
       -dDownsampleMonoImages=false \
+      -sColorConversionStrategy=RGB \
+      -dProcessColorModel=/DeviceRGB \
+      -dOverrideICC=true \
       -sOutputFile="${compressed_tmp}" \
       "${ROOT_DIR}/${PDF_FILE}"
 
