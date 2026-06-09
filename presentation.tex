@@ -43,28 +43,37 @@
   \end{beamercolorbox}%
 }
 \newcommand{\figcap}[1]{%
-  \vspace{0.25em}
+  \vspace{0.45em}
   \begin{center}
-    {\scriptsize\color{black!68}#1}
-  \end{center}
-}
-\newcommand{\sectionnote}[1]{%
-  \begin{center}
-    \begin{minipage}{0.90\linewidth}
-      \centering\scriptsize #1
+    \begin{minipage}{0.88\linewidth}
+      \centering
+      {\scriptsize\color{black!68}\linespread{1.18}\selectfont #1\par}
     \end{minipage}
   \end{center}
+  \vspace{0.12em}
+}
+\newcommand{\sectionnote}[1]{%
+  \vspace{0.25em}
+  \begin{center}
+    \begin{minipage}{0.88\linewidth}
+      \centering
+      {\scriptsize\linespread{1.22}\selectfont #1\par}
+    \end{minipage}
+  \end{center}
+  \vspace{0.08em}
 }
 
 \setbeamersize{text margin left=0.58cm,text margin right=0.58cm}
 \setbeamertemplate{frametitle}{%
-  \vspace*{-0.6em}
-  \begin{center}
+  \vspace*{-2.55em}
+  \hspace*{1.38cm}%
+  \begin{minipage}[t]{0.78\paperwidth}
+    \raggedright
     {\usebeamerfont{frametitle}\color{HSEblue}\insertframetitle\par}
-    \vspace{0.05em}
+    \vspace{0.04em}
     {\usebeamerfont{framesubtitle}\color{black!60}\insertframesubtitle\par}
-  \end{center}
-  \vspace{-0.35em}
+  \end{minipage}
+  \vspace{0.18em}
 }
 \setbeamertemplate{caption}{\centering\insertcaption\par}
 \setbeamerfont{frametitle}{size=\Large,series=\bfseries}
@@ -85,13 +94,13 @@
 
 \begin{frame}[plain]
   \begin{center}
-    \includegraphics[width=0.17\textwidth]{hse-theme/hse-logo-full-ru}\\[0.7em]
-    {\footnotesize НИУ ВШЭ, Нижегородский филиал\\
-    Факультет информатики, математики и компьютерных наук}\\[1.0em]
-    {\color{HSEblue}\fontsize{13.4}{15.8}\selectfont\bfseries
+    \includegraphics[width=0.085\textwidth]{hse-theme/hse-logo-full-ru}\\[0.45em]
+    {\scriptsize НИУ ВШЭ, Нижегородский филиал\\
+    Факультет информатики, математики и компьютерных наук}\\[0.75em]
+    {\color{HSEblue}\fontsize{11.4}{13.4}\selectfont\bfseries
     Оптимизация качества облачного видеостриминга в условиях ограниченности вычислительных ресурсов с применением классических эвристических методов и подходов на основе машинного обучения\par}
-    \vspace{0.85em}
-    {\normalsize Выпускная квалификационная работа - бакалаврская работа}\\[1.0em]
+    \vspace{0.65em}
+    {\footnotesize Выпускная квалификационная работа - бакалаврская работа}\\[0.85em]
   \end{center}
   \begin{columns}[T,onlytextwidth]
     \column{0.33\textwidth}
@@ -229,9 +238,12 @@
 \begin{columns}[T,onlytextwidth]
   \column{0.57\textwidth}
   \begin{center}
-    \includegraphics[width=0.90\linewidth]{performance/p99_area_f1_tradeoff.png}
+    \includegraphics[width=0.86\linewidth]{performance/p99_area_f1_tradeoff.png}
   \end{center}
-  \figcap{Каждая точка соответствует одной runtime-конфигурации grid-search.}
+  \vspace{0.18em}
+  {\centering\begin{minipage}{0.88\linewidth}
+    \centering{\scriptsize\color{black!68}\linespread{1.15}\selectfont Каждая точка соответствует одной runtime-конфигурации grid-search.\par}
+  \end{minipage}\par}
   \column{0.40\textwidth}
   \begin{tabularx}{\linewidth}{@{}lZZZ@{}}
     \toprule
