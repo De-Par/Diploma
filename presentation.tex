@@ -1,0 +1,261 @@
+%!TEX TS-program = xelatex
+
+% Defense presentation based on the official HSE Beamer theme:
+% https://www.hse.ru/info/brandbook/
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usepackage{etoolbox}
+\newbool{russian}
+\booltrue{russian}
+\input{hse-theme/hse-beamer-theme.sty}
+
+\usepackage[english,russian]{babel}
+\usepackage[no-math]{fontspec}
+\IfFontExistsTF{HSE Sans}
+  {\setsansfont{HSE Sans}}
+  {\setsansfont{Arial}}
+\IfFontExistsTF{Arial}
+  {\setmainfont{Arial}}
+  {\setmainfont{Times New Roman}}
+\IfFontExistsTF{Courier New}
+  {\setmonofont{Courier New}[Scale=MatchLowercase]}
+  {\setmonofont{Menlo}[Scale=MatchLowercase]}
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{ragged2e}
+
+\graphicspath{{figures/}}
+
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{Z}{>{\Centering\arraybackslash}X}
+\newcommand{\metricbox}[3]{%
+  \begin{beamercolorbox}[wd=#1,sep=0.55em,center,rounded=true]{BlueOnWhite}
+    {\scriptsize #2}\\[-0.1em]
+    {\normalsize\bfseries #3}
+  \end{beamercolorbox}%
+}
+
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\normalsize}
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+
+\title[ROI-aware видеостриминг]{\Large ROI-aware оптимизация качества облачного видеостриминга}
+\subtitle{При ограниченном CPU и размере потока}
+\author[Д. Д. Паршин]{Даниил Денисович Паршин\\\smallskip\scriptsize Прикладная математика и информатика}
+\institute{НИУ ВШЭ, Нижегородский филиал\\Факультет информатики, математики и компьютерных наук}
+\date{Нижний Новгород, 2026}
+
+\begin{document}
+
+\frame[plain]{\titlepage}
+
+\begin{frame}
+\frametitle{Проблема}
+\framesubtitle{Кодек экономит биты, но пользователь видит не весь кадр одинаково}
+\begin{columns}[T,onlytextwidth]
+  \column{0.52\textwidth}
+  \begin{itemize}
+    \item В облачном стриминге одновременно ограничены битрейт, задержка и CPU на поток.
+    \item При сжатии сильнее всего заметны ошибки в тексте, лицах и деталях одежды; фон менее критичен.
+    \item Глобальные PSNR, SSIM и VMAF усредняют фон и могут скрыть локальный выигрыш в важных областях.
+  \end{itemize}
+  \column{0.45\textwidth}
+  \begin{block}{Что нужно кодировщику}
+    Не команда «улучшить весь кадр», а список ROI с типом, приоритетом, ограничением площади и \texttt{qoffset}.
+  \end{block}
+  \vspace{0.7em}
+  \metricbox{0.30\linewidth}{ROI 1}{текст}
+  \hfill
+  \metricbox{0.30\linewidth}{ROI 2}{лица}
+  \hfill
+  \metricbox{0.30\linewidth}{ROI 3}{cloth}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Конкретная задача}
+\framesubtitle{Проверить не детектор отдельно, а ROI-aware контур кодирования}
+\begin{columns}[T,onlytextwidth]
+  \column{0.48\textwidth}
+  \begin{block}{Вход и выход}
+    \begin{itemize}
+      \item вход: FHD-кадр и режим ROI;
+      \item выход: геометрия ROI и side data для кодировщика;
+      \item проверка: baseline vs ROI-aware HEVC.
+    \end{itemize}
+  \end{block}
+  \column{0.49\textwidth}
+  \begin{alertblock}{Ограничения}
+    \begin{itemize}
+      \item размер потока почти не растет: size ratio $\leq 1.006$;
+      \item рабочие точки ROI-веток: p99 $<10$ ms;
+      \item защищаемая площадь ROI ограничена, иначе фон потеряет весь бюджет.
+    \end{itemize}
+  \end{alertblock}
+\end{columns}
+\vspace{0.6em}
+\begin{block}{Что сделано в работе}
+IDet для text/face/textured ROI, YOLO26n для textured ROI, qoffset-политика и покадровое сравнение \texttt{libx265} baseline с ROI-aware режимом.
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Подходы к решению}
+\framesubtitle{Почему недостаточно одного ABR или одной mAP}
+\begin{table}
+\small
+\begin{tabularx}{\linewidth}{@{}lYY@{}}
+  \toprule
+  Подход & Что решает & Что не решает в этой задаче \\
+  \midrule
+  ABR & выбор битрейта и разрешения во времени & не перераспределяет качество внутри кадра \\
+  Глобальные метрики & сравнение общих искажений кадра & слабо отражают деградацию мелкого текста и лиц \\
+  ROI/saliency coding & дает механизм защиты областей & требует детектора, area cap, приоритетов и стабильности ROI \\
+  Детектор по mAP & оценивает локализацию объектов & не учитывает CPU, p99 и эффект в кодировщике \\
+  \bottomrule
+\end{tabularx}
+\end{table}
+\vspace{0.4em}
+\begin{block}{Позиция работы}
+Сравнивается не «точность модели ради точности», а связка: ROI-детекция $\rightarrow$ qoffset $\rightarrow$ качество ROI при сопоставимом размере файла.
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Мой подход}
+\framesubtitle{IDet отделяет детекторы от политики кодирования}
+\begin{columns}[T,onlytextwidth]
+  \column{0.56\textwidth}
+  \includegraphics[width=\linewidth]{architecture/roi_pipeline_overview.png}
+  \column{0.41\textwidth}
+  \begin{itemize}
+    \item IDet возвращает геометрию \texttt{VecQuad}; Python-обучение не входит в runtime.
+    \item Text ROI, Face ROI и Textured ROI объединяются в общий список кандидатов.
+    \item Downstream-слой добавляет тип, приоритет, area cap и \texttt{qoffset}.
+    \item Для проверки используется \texttt{FFmpeg addroi} и \texttt{libx265}.
+  \end{itemize}
+  \vspace{0.1em}
+  \begin{table}
+  \scriptsize
+  \begin{tabularx}{\linewidth}{@{}lZZ@{}}
+    \toprule
+    ROI & Приоритет & \texttt{qoffset} \\
+    \midrule
+    Text & высокий & $-1/4$ \\
+    Face & высокий & $-1/5$ \\
+    Cloth & средний & $-1/10$ \\
+    \bottomrule
+  \end{tabularx}
+  \end{table}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Textured ROI}
+\framesubtitle{YOLO26n выбран из-за цены исполнения, а не из-за максимальной mAP}
+\begin{columns}[T,onlytextwidth]
+  \column{0.54\textwidth}
+  \includegraphics[width=\linewidth]{yolo/yolo_quality_cost_tradeoff.png}
+  \column{0.43\textwidth}
+  \begin{itemize}
+    \item DeepFashion2 и Fashionpedia сведены к 7 классам одежды и материалов.
+    \item YOLO26n: precision 0.903, recall 0.873, mAP50 0.938.
+    \item YOLO26s дает mAP50-95 0.837 против 0.818, но стоит 20.5 GFLOPs против 5.2.
+  \end{itemize}
+  \vspace{0.3em}
+  \begin{block}{Решение}
+    Для CPU-first IDet выбран YOLO26n: прирост YOLO26s мал относительно примерно четырехкратной вычислительной цены.
+  \end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Эксперимент кодирования}
+\framesubtitle{Baseline и ROI-aware сравниваются при почти одинаковом размере}
+\begin{columns}[T,onlytextwidth]
+  \column{0.48\textwidth}
+  \includegraphics[width=\linewidth]{video-quality/roi_encoding_protocol.png}
+  \column{0.49\textwidth}
+  \begin{table}
+  \scriptsize
+  \begin{tabularx}{\linewidth}{@{}lZZZ@{}}
+    \toprule
+    Режим & Кадры & Size ratio & \texttt{qoffset} \\
+    \midrule
+    Text & 3000 & 1.0036 & $-1/4$ \\
+    Face & 3000 & 1.0058 & $-1/5$ \\
+    Cloth & 2696 & 1.0029 & $-1/10$ \\
+    \bottomrule
+  \end{tabularx}
+  \end{table}
+  \begin{itemize}
+    \item Baseline: \texttt{libx265}, CRF 32, preset \texttt{medium}.
+    \item ROI-aware: тот же кодировщик плюс ROI side data.
+    \item Режим \texttt{match\_baseline}: эффект нельзя объяснить ростом файла.
+  \end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Результаты качества}
+\framesubtitle{Качество перераспределяется в ROI, а не равномерно растет по кадру}
+\begin{columns}[T,onlytextwidth]
+  \column{0.55\textwidth}
+  \includegraphics[width=\linewidth]{video-quality/roi_crop_effects.png}
+  \column{0.42\textwidth}
+  \begin{table}
+  \scriptsize
+  \begin{tabularx}{\linewidth}{@{}lZZZ@{}}
+    \toprule
+    Режим & ROI PSNR & Crop VMAF & Pos. share \\
+    \midrule
+    Text & +3.331 dB & +4.451 & 1.00 \\
+    Face & +3.284 dB & +5.857 & 1.00 \\
+    Cloth & +0.547 dB & +0.449 & 0.90--1.00 \\
+    \bottomrule
+  \end{tabularx}
+  \end{table}
+  \begin{alertblock}{Цена перераспределения}
+    Фон получает меньше битов. Например, для Cloth background PSNR снижается на 1.148 dB.
+  \end{alertblock}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Производительность и вывод}
+\framesubtitle{Рабочие точки ROI-веток укладываются в p99 меньше 10 ms}
+\begin{columns}[T,onlytextwidth]
+  \column{0.50\textwidth}
+  \includegraphics[width=0.92\linewidth]{performance/selected_detector_profiles.png}
+  \column{0.47\textwidth}
+  \begin{table}
+  \scriptsize
+  \begin{tabularx}{\linewidth}{@{}lZZZ@{}}
+    \toprule
+    Режим & p99, ms & Area F1 & Recall \\
+    \midrule
+    Text & 8.032 & 0.788 & 0.886 \\
+    Face & 7.553 & 0.922 & 0.916 \\
+    Cloth & 9.230 & 0.871 & 0.920 \\
+    \bottomrule
+  \end{tabularx}
+  \end{table}
+  \begin{block}{Итог}
+    Локальный выигрыш ROI подтвержден при почти неизменном размере потока.
+  \end{block}
+  \begin{itemize}
+    \item Полный video end-to-end тест требует temporal smoothing, tracking и GOP-aware настройки.
+    \item Одновременный запуск трех веток требует планировщика и переиспользования ROI.
+  \end{itemize}
+\end{columns}
+\end{frame}
+
+\end{document}
