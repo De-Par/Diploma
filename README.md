@@ -1,10 +1,10 @@
 # Bachelor's Thesis
 
-This repository contains the LaTeX source code and the final PDF version of the bachelor's thesis:
+This repository contains the LaTeX sources, figures, HSE Beamer theme assets, and publication-ready PDFs for the bachelor's thesis:
 
 > **“Optimization of Cloud Video Streaming Quality Under Limited Computational Resources Using Classical Heuristic Methods and Machine Learning Approaches”**
 
-The thesis studies an ROI-aware approach to improving perceived video streaming quality. The central idea is to detect visually important regions in video frames and expose them to a downstream encoder-side policy, so that quality can be redistributed toward text, faces, and textured regions.
+The thesis studies an ROI-aware approach to cloud video streaming quality. The main idea is to detect visually important regions before encoding and pass them to the encoder-side policy, so that quality is redistributed toward text, faces, and textured regions without materially increasing the output size.
 
 ## Practical Basis
 
@@ -17,50 +17,43 @@ The thesis explicitly separates:
 
 - the implemented public IDet contract: `VecQuad`;
 - implemented text/face ROI modes and the prepared textured ROI detector;
-- the downstream contract with ROI type, priority, and `qoffset`;
-- the methodology for future baseline vs ROI-aware encoded stream evaluation.
-
-The final quantitative evaluation of encoded video quality with and without ROI is intentionally left as a methodology section without fabricated numbers.
+- the downstream contract with ROI type, priority, area budget, and `qoffset`;
+- the frame-level baseline vs ROI-aware HEVC evaluation and the limits of extending it to full video.
 
 ## Repository Layout
 
 ```text
 .
 ├── diploma.tex               # main LaTeX source
-├── diploma.pdf               # compiled thesis PDF
-├── diploma_compressed.pdf    # optional compressed PDF generated when Ghostscript is available
+├── presentation.tex          # 8-minute defense presentation source
 ├── build.sh                  # reproducible XeLaTeX/latexmk build script
+├── docs/                     # publication-ready PDFs, committed to Git
+├── artefacts/                # ignored LaTeX auxiliary files and temporary PDFs
+├── hse-theme/                # official HSE Beamer theme files with normalized names
 ├── figures/                  # figures, diagrams, and plots used by the thesis
-│   ├── appendix/
-│   ├── architecture/
-│   ├── datasets/
-│   ├── performance/
-│   ├── profiling/
-│   ├── video-quality/
-│   └── yolo/
 ├── .latexmkrc
 └── .gitignore
 ```
 
 The local `data/` directory with raw experimental materials is not part of the public repository. The repository includes only the derived figures and tables required to build the current thesis version.
 
-## Thesis Structure
+`docs/` is the publishable output directory and is intentionally not ignored. `artefacts/` is ignored and contains only LaTeX build products, temporary Ghostscript outputs, logs, and intermediate files.
 
-1. Introduction and problem statement.
-2. Cloud video streaming and ROI-aware video coding.
-3. Formal ROI-aware quality optimization.
-4. IDet architecture and the three-mode ROI pipeline.
-5. Textured ROI detector training with YOLO.
-6. ONNX / ONNX Runtime deployment and quantization.
-7. Experimental methodology.
-8. YOLO model results and confusion matrix analysis.
-9. Text/face/textured ROI benchmarks, profiling, I/O Binding, NUMA, and Top-Down Microarchitecture Analysis.
-10. Methodology for baseline vs ROI-aware encoded stream comparison.
-11. Engineering limitations, risks, and conclusion.
+## Defense Presentation
 
-## Building the PDF
+`presentation.tex` uses the official HSE Beamer theme from the HSE brandbook page and is structured for an 8-minute student defense:
 
-The document must be built with XeLaTeX because `diploma.tex` uses `fontspec` and the system fonts Times New Roman, Arial, and Courier New. Building with `pdflatex` is not supported.
+1. problem;
+2. concrete task and constraints;
+3. brief review of solution approaches;
+4. proposed ROI-aware approach;
+5. experimental results and limitations.
+
+The slide deck is intentionally short and concrete: it focuses on the detector-to-encoder path, the YOLO26n deployment choice, the HEVC `match_baseline` experiment, and the measured ROI quality gains.
+
+## Building the PDFs
+
+The documents must be built with XeLaTeX because `diploma.tex` and `presentation.tex` use `fontspec` and system fonts. Building with `pdflatex` is not supported.
 
 Quick start:
 
@@ -69,22 +62,30 @@ chmod +x ./build.sh
 ./build.sh
 ```
 
-After a successful build, the final PDF is placed in the repository root:
+Default output:
 
 ```text
-diploma.pdf
+docs/diploma.pdf
+docs/diploma_compressed.pdf
 ```
 
-If Ghostscript is available, `build.sh` also writes a compressed copy:
+Build targets:
 
-```text
-diploma_compressed.pdf
+```bash
+./build.sh                         # docs/diploma.pdf + docs/diploma_compressed.pdf
+./build.sh diploma-pdf             # docs/diploma.pdf only
+./build.sh diploma-compressed      # docs/diploma.pdf + docs/diploma_compressed.pdf
+./build.sh presentation            # docs/presentation.pdf
+./build.sh presentation-compressed # docs/presentation.pdf + docs/presentation_compressed.pdf
+./build.sh all                     # diploma with compression + docs/presentation.pdf
+./build.sh all-compressed          # diploma and presentation, both with compressed copies
 ```
 
-The compressed copy is produced as a separate file and does not replace `diploma.pdf`.
-Disable this step with `COMPRESS_PDF=0 ./build.sh`.
+If Ghostscript is unavailable, compressed targets still build the regular PDF and print a warning. Disable compression explicitly with:
 
-Auxiliary LaTeX files are placed in `artefacts/`. This directory is ignored by Git.
+```bash
+COMPRESS_PDF=0 ./build.sh
+```
 
 ## Dependencies
 
@@ -94,8 +95,9 @@ Required tools:
 - `latexmk`;
 - TeX Live packages for standard LaTeX, Cyrillic support, tables, graphics, and `fontspec`;
 - Times New Roman, Arial, and Courier New system fonts;
-- `pdfinfo` from `poppler` is recommended for page-count validation in `build.sh`.
-- `ghostscript` is optional; when installed, `build.sh` generates `diploma_compressed.pdf`.
+- HSE Sans is recommended for `presentation.tex`; the source falls back to Arial when it is not installed;
+- `pdfinfo` from `poppler` is recommended for page-count validation in `build.sh`;
+- `ghostscript` is optional and is used for compressed PDFs.
 
 ### macOS
 
@@ -142,12 +144,20 @@ fc-match "Courier New"
 
 ## Manual Build
 
-Equivalent manual build command:
+Equivalent manual build command for the thesis:
 
 ```bash
-mkdir -p artefacts
+mkdir -p artefacts docs
 latexmk -xelatex -g -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts diploma.tex
-cp artefacts/diploma.pdf diploma.pdf
+cp artefacts/diploma.pdf docs/diploma.pdf
+```
+
+Equivalent manual build command for the defense presentation:
+
+```bash
+mkdir -p artefacts docs
+latexmk -xelatex -g -synctex=1 -interaction=nonstopmode -file-line-error -outdir=artefacts presentation.tex
+cp artefacts/presentation.pdf docs/presentation.pdf
 ```
 
 Optional Ghostscript compression, matching `build.sh`:
@@ -164,8 +174,8 @@ gs -sDEVICE=pdfwrite \
   -dDownsampleColorImages=false \
   -dDownsampleGrayImages=false \
   -dDownsampleMonoImages=false \
-  -sOutputFile=diploma_compressed.pdf \
-  diploma.pdf
+  -sOutputFile=docs/diploma_compressed.pdf \
+  docs/diploma.pdf
 ```
 
 On macOS, if locale issues occur:
@@ -184,12 +194,12 @@ env LANG=C.UTF-8 LC_ALL=C.UTF-8 latexmk -xelatex -synctex=1 -interaction=nonstop
 
 This repository is prepared as a public thesis repository:
 
-- `diploma.tex` and `figures/` are sufficient to rebuild the document;
-- `diploma.pdf` is included as the compiled result;
-- local experimental data, editor settings, and LaTeX build artifacts are excluded from Git;
-- experimental claims in the thesis are based on available summary data, training reports, benchmark tables, and profiling artifacts;
-- the baseline vs ROI-aware video quality section is written as a methodology section without unsupported numerical claims.
+- `diploma.tex`, `presentation.tex`, `hse-theme/`, and `figures/` are sufficient to rebuild the documents;
+- ready PDFs are committed under `docs/`;
+- local experimental data, editor settings, and LaTeX build artefacts are excluded from Git;
+- experimental claims in the thesis are based on available summary data, training reports, benchmark tables, profiling artifacts, and the frame-level ROI-aware encoding experiment;
+- the baseline vs ROI-aware video quality section reports frame-level results and explicitly limits the conclusion to that setting.
 
 ## Authorship and Usage
 
-The thesis text, figures, and compiled PDF are published as educational and research material. All rights to the text and formatting are reserved by the author.
+The thesis text, figures, presentation, and compiled PDFs are published as educational and research material. All rights to the text and formatting are reserved by the author.
