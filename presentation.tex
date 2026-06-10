@@ -34,8 +34,10 @@
 \newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
 \newcolumntype{Z}{>{\Centering\arraybackslash}X}
 \newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash}p{#1}}
 \newcommand{\ms}{\mathrm{ms}}
 \newcommand{\smallcell}[1]{\begin{tabular}{@{}c@{}}#1\end{tabular}}
+\newcommand{\thead}[1]{\textbf{#1}}
 \newcommand{\metric}[2]{%
   \begin{beamercolorbox}[wd=\linewidth,sep=0.65em,center]{BlueOnWhite}
     {\scriptsize\bfseries #1}\\[0.15em]
@@ -52,6 +54,16 @@
   \end{center}
   \vspace{0.12em}
 }
+\newcommand{\tightfigcap}[1]{%
+  \vspace{0.22em}
+  \begin{center}
+    \begin{minipage}{0.92\linewidth}
+      \centering
+      {\scriptsize\color{black!68}\linespread{1.12}\selectfont #1\par}
+    \end{minipage}
+  \end{center}
+  \vspace{-0.02em}
+}
 \newcommand{\sectionnote}[1]{%
   \vspace{0.25em}
   \begin{center}
@@ -62,6 +74,7 @@
   \end{center}
   \vspace{0.08em}
 }
+\newcommand{\aftertablegap}{\vspace{0.90em}}
 
 \setbeamersize{text margin left=0.58cm,text margin right=0.58cm}
 \setbeamertemplate{frametitle}{%
@@ -116,119 +129,130 @@
 
 \begin{frame}
 \frametitle{Проблема}
-\framesubtitle{Ограничение качества в облачном стриминге не сводится к выбору битрейта}
+\framesubtitle{Пространственное распределение качества не определяется только битрейтом}
 \footnotesize
 \begin{columns}[T,onlytextwidth]
-  \column{0.52\textwidth}
+  \column{0.51\textwidth}
   \begin{itemize}
-    \item Облачный видеоконвейер делит CPU между детекцией, кодированием, сетью и служебной логикой.
-    \item ABR управляет качеством во времени: битрейт, разрешение, профиль. Но внутри кадра качество остается распределенным эвристиками кодека.
-    \item Для пользователя ошибки неравноценны: текст, лица и фактуры одежды заметнее, чем однородный фон.
+    \item В облачном видеоконвейере CPU-бюджет распределяется между ROI-детекцией, кодированием, сетевым стеком и управляющей логикой.
+    \item ABR регулирует потоковые параметры во времени: битрейт, разрешение и профиль. Пространственный приоритет областей внутри кадра при этом не задается.
+    \item Перцептивная значимость ошибок неоднородна: деградация текста, лиц и высокочастотных фактур критичнее деградации фоновых областей.
   \end{itemize}
-  \column{0.44\textwidth}
+  \column{0.45\textwidth}
   \begin{table}
   \scriptsize
-  \begin{tabularx}{\linewidth}{@{}lY@{}}
+  \begin{tabularx}{\linewidth}{@{}P{0.25\linewidth}Y@{}}
     \toprule
-    Область & Почему важна \\
+    \thead{ROI-класс} & \thead{Кодировочная роль} \\
     \midrule
-    Text & читаемость интерфейса, субтитров, документов \\
-    Face & субъективно значимые человеческие области \\
-    Cloth & высокочастотные фактуры, где артефакты заметны \\
-    Background & источник бюджета для перераспределения \\
+    Text & сохранение читаемости UI, субтитров и документов \\
+    \addlinespace[0.12em]
+    Face & защита субъективно значимых человеческих областей \\
+    \addlinespace[0.12em]
+    Cloth & снижение артефактов квантования на высокочастотных фактурах \\
+    \addlinespace[0.12em]
+    Background & источник битового бюджета для перераспределения качества \\
     \bottomrule
   \end{tabularx}
   \end{table}
+  \aftertablegap
   \begin{block}{Проблема работы}
-    Нужен способ передать кодировщику, какие области кадра важнее, не выходя за CPU-бюджет и размер потока.
+    Требуется сформировать для кодировщика пространственный управляющий сигнал без выхода за CPU-бюджет и без существенного роста размера потока.
   \end{block}
 \end{columns}
 \end{frame}
 
 \begin{frame}
 \frametitle{Конкретная задача}
-\framesubtitle{Проверяется связка «детектор ROI $\rightarrow$ политика кодирования $\rightarrow$ качество»}
+\framesubtitle{Верифицируется контур «ROI-детекция $\rightarrow$ политика кодировщика $\rightarrow$ метрики качества»}
 \footnotesize
 \begin{columns}[T,onlytextwidth]
-  \column{0.47\textwidth}
-  \begin{block}{Что нужно построить}
+  \column{0.45\textwidth}
+  \begin{block}{Вклад ВКР}
     \begin{itemize}
-      \item CPU-first слой IDet для Text, Face и Cloth ROI.
-      \item Контракт ROI: геометрия, тип, приоритет, ограничение площади, \texttt{qoffset}.
-      \item Эксперимент baseline vs ROI-aware HEVC при сопоставимом размере.
+      \item ROI-aware оптимизация формализуется как ограниченная задача качества с учетом задержки, битрейта и площади ROI.
+      \item IDet рассматривается как CPU-ориентированный слой между моделями компьютерного зрения и политикой кодировщика.
+      \item Эффект проверяется через baseline и ROI-aware HEVC при сопоставимом размере выходного потока.
     \end{itemize}
   \end{block}
-  \column{0.50\textwidth}
+  \column{0.52\textwidth}
   \begin{table}
   \scriptsize
-  \begin{tabularx}{\linewidth}{@{}lY@{}}
+  \begin{tabularx}{\linewidth}{@{}P{0.28\linewidth}Y@{}}
     \toprule
-    Ограничение & Практический смысл \\
+    \thead{Компонент} & \thead{Назначение в проверке} \\
     \midrule
-    p99 $<10\,\ms$ & tail latency важнее среднего времени \\
-    size ratio $\approx1$ & выигрыш не покупается ростом файла \\
-    area cap & ROI не должна занять почти весь кадр \\
-    portable ONNX & runtime не зависит от Python и GPU \\
+    p99 $<10\,\ms$ & контроль хвоста распределения задержки \\
+    \addlinespace[0.12em]
+    size ratio $\approx1$ & исключение выигрыша за счет роста файла \\
+    \addlinespace[0.12em]
+    area budget & ограничение доли кадра под защитой ROI \\
+    \addlinespace[0.12em]
+    \texttt{qoffset} & смещение квантования для защищаемой области \\
+    \addlinespace[0.12em]
+    ONNX artifact & CPU-путь без Python-стека и GPU \\
     \bottomrule
   \end{tabularx}
   \end{table}
-  \begin{alertblock}{Граница вывода}
-    Эксперимент кодирования покадровый: он изолирует spatial ROI-effect, но не заменяет полный end-to-end видеотест.
+  \aftertablegap
+  \begin{alertblock}{Область применимости вывода}
+    Покадровый эксперимент изолирует пространственный эффект ROI side data; временная стабильность, GOP-динамика и end-to-end latency требуют отдельной видеоверификации.
   \end{alertblock}
 \end{columns}
 \end{frame}
 
 \begin{frame}
 \frametitle{Обзор подходов}
-\framesubtitle{Почему модель детекции сама по себе не решает задачу видеокачества}
+\framesubtitle{Метрики детектора недостаточны для оценки кодировочного эффекта}
 \scriptsize
 \begin{adjustbox}{max width=\linewidth}
 \begin{tabularx}{0.97\linewidth}{@{}P{0.20\linewidth}Y Y@{}}
   \toprule
-  Подход & Что дает & Что остается нерешенным \\
+  \thead{Методический класс} & \thead{Роль в системе} & \thead{Ограничение для данной задачи} \\
   \midrule
   ABR / rate adaptation &
-  Управляет битрейтом, разрешением и профилем потока во времени. &
-  Не говорит кодировщику, что внутри одного кадра текст важнее фона. \\
+  Регулирует битрейт, разрешение и профиль кодирования на временной шкале потока. &
+  Не задает пространственный приоритет и распределение квантизации внутри отдельного кадра. \\
   \addlinespace[0.25em]
   Global PSNR/SSIM/VMAF &
-  Удобны для общей оценки кодека и регрессий. &
-  Усредняют кадр; локальная деградация ROI может быть скрыта фоном. \\
+  Дают агрегированную оценку кодека и регрессионного качества. &
+  Усредняют ошибки по площади кадра; локальная деградация ROI может быть замаскирована фоном. \\
   \addlinespace[0.25em]
-  ROI/saliency coding &
-  Позволяет передавать кодировщику spatial priority. &
-  Требует надежного ROI extraction, area cap, qoffset-policy и temporal stability. \\
+  ROI-/saliency-кодирование &
+  Передает кодировщику пространственный управляющий сигнал. &
+  Требует устойчивого выделения ROI, area cap, \texttt{qoffset}-policy и временной стабильности. \\
   \addlinespace[0.25em]
-  Detector-only mAP &
-  Проверяет качество ML-компонента. &
-  Не учитывает CPU, p99, постобработку и фактический эффект в \texttt{libx265}. \\
+  mAP детектора &
+  Валидирует ML-компонент на уровне распознавания областей. &
+  Не учитывает стоимость CPU-исполнения, p99-задержку, постобработку и фактический эффект в \texttt{libx265}. \\
   \bottomrule
 \end{tabularx}
 \end{adjustbox}
 \vspace{0.55em}
-\begin{block}{Позиция ВКР}
-Оценивать нужно не отдельную mAP, а системный контур: ROI-детекция формирует side data, кодировщик перераспределяет биты, метрики проверяют локальный эффект при почти том же размере потока.
+\begin{block}{Методическая позиция ВКР}
+Единицей оценки является системный контур: ROI-детекция формирует side data, кодировщик перераспределяет биты, а метрики фиксируют локальный эффект при практически неизменном размере потока.
 \end{block}
 \end{frame}
 
 \begin{frame}
 \frametitle{Предлагаемый подход}
-\framesubtitle{IDet отделяет runtime-детекцию от политики кодирования}
+\framesubtitle{Разделение слоя инференса и политики кодировщика}
 \footnotesize
 \begin{center}
-  \includegraphics[width=0.81\linewidth,trim=0 58 0 62,clip]{architecture/roi_pipeline_overview.png}
+  \includegraphics[width=0.82\linewidth,trim=0 58 0 62,clip]{architecture/roi_pipeline_overview.png}
 \end{center}
-\figcap{Text/Face/Cloth ROI объединяются в геометрию; кодировочный слой добавляет тип, приоритет, area cap и \texttt{qoffset}.}
+  \tightfigcap{IDet возвращает нормализованную геометрию ROI; кодировочный слой интерпретирует ее как типизированные ROI side data с приоритетом, бюджетом площади и \texttt{qoffset}.}
+\sectionnote{\textbf{Граница ответственности:} публичный API IDet остается геометрическим \texttt{VecQuad}; тип, приоритет и \texttt{qoffset} относятся к последующему слою интеграции с кодировщиком.}
 \end{frame}
 
 \begin{frame}
-\frametitle{Textured ROI}
-\framesubtitle{YOLO26s: +0.019 mAP50-95, но 20.5 GFLOPs против 5.2}
+\frametitle{Детектор фактурных ROI}
+\framesubtitle{Выбор модели определяется стоимостью развертывания, а не только mAP}
 \scriptsize
 \begin{center}
-  \includegraphics[width=0.71\linewidth]{yolo/yolo_quality_cost_tradeoff.png}
+  \includegraphics[width=0.75\linewidth]{yolo/yolo_quality_cost_tradeoff.png}
 \end{center}
-\figcap{Выбор YOLO26n: 0.818 mAP50-95, 5.2 GFLOPs и 9.3 MB против 0.837, 20.5 GFLOPs и 36.4 MB у YOLO26s.}
+  \tightfigcap{YOLO26n выбран как кандидат для развертывания: 0.818 mAP50-95, 5.2 GFLOPs, 9.3 MB; YOLO26s дает 0.837, но требует 20.5 GFLOPs и 36.4 MB. Данные DeepFashion2 + Fashionpedia сведены к 7 классам; проверены разбиения, bbox и PT-to-ONNX контракт.}
 \end{frame}
 
 \begin{frame}
@@ -236,107 +260,108 @@
 \framesubtitle{Рабочая точка выбирается по p99 и качеству покрытия ROI}
 \scriptsize
 \begin{columns}[T,onlytextwidth]
-  \column{0.57\textwidth}
+  \column{0.60\textwidth}
   \begin{center}
-    \includegraphics[width=0.86\linewidth]{performance/p99_area_f1_tradeoff.png}
+    \includegraphics[width=0.95\linewidth]{performance/p99_area_f1_tradeoff.png}
   \end{center}
   \vspace{0.18em}
   {\centering\begin{minipage}{0.88\linewidth}
     \centering{\scriptsize\color{black!68}\linespread{1.15}\selectfont Каждая точка соответствует одной runtime-конфигурации grid-search.\par}
   \end{minipage}\par}
-  \column{0.40\textwidth}
-  \begin{tabularx}{\linewidth}{@{}lZZZ@{}}
+  \column{0.37\textwidth}
+  \begin{tabularx}{\linewidth}{@{}P{0.22\linewidth}ZZZ@{}}
     \toprule
-    Режим & p99, ms & Recall & Area F1 \\
+    \thead{Режим} & \thead{p99, ms} & \thead{Recall} & \thead{Area F1} \\
     \midrule
     Text & 8.032 & 0.886 & 0.788 \\
     Face & 7.553 & 0.916 & 0.922 \\
     Cloth & 9.230 & 0.920 & 0.871 \\
     \bottomrule
   \end{tabularx}
-  \vspace{0.2em}
+  \vspace{0.95em}
   \begin{itemize}
-    \item Text: выше recall, чтобы не пропустить читаемые области.
-    \item Face: лучший баланс Area F1 и p99.
-    \item Cloth: ближе к $10\,\ms$, потому что YOLO тяжелее.
+    \item p99 измеряется на чистом пути исполнения: без сохранения артефактов, визуализации и диагностического вывода.
+    \item Рабочие точки различаются по цене ошибки: Text приоритизирует recall, Face --- Area F1, Cloth ограничен стоимостью YOLO-инференса.
+    \item Полный видеоконвейер требует планировщика частоты запусков и переиспользования ROI между кадрами.
   \end{itemize}
 \end{columns}
 \end{frame}
 
 \begin{frame}
-\frametitle{Протокол кодирования}
-\framesubtitle{Режим match\_baseline исключает объяснение «файл стал больше»}
+\frametitle{Интеграция ROI в кодировщик}
+\framesubtitle{Режим match\_baseline фиксирует сопоставимый размер потока}
 \scriptsize
 \begin{columns}[T,onlytextwidth]
-  \column{0.58\textwidth}
+  \column{0.60\textwidth}
   \begin{center}
-    \includegraphics[width=0.96\linewidth,trim=0 120 0 120,clip]{video-quality/roi_encoding_protocol.png}
+    \includegraphics[width=\linewidth,trim=0 120 0 120,clip]{video-quality/roi_encoding_protocol.png}
   \end{center}
-  \figcap{Baseline и ROI-aware ветки декодируются обратно в PNG и сравниваются с оригиналом.}
-  \column{0.39\textwidth}
+  \figcap{Baseline и ROI-aware ветки декодируются в PNG-последовательность и сравниваются с исходными FHD-кадрами.}
+  \column{0.37\textwidth}
   \scriptsize
-  \begin{tabularx}{\linewidth}{@{}lZZZZ@{}}
+  \begin{tabularx}{\linewidth}{@{}P{0.17\linewidth}ZZZZ@{}}
     \toprule
-    Режим & Кадры & Baseline & Size ratio & qoff. \\
+    \thead{Режим} & \thead{Кадры} & \thead{CRF} & \thead{Ratio} & \thead{qoff.} \\
     \midrule
     Text & 3000 & CRF 32 & 1.0036 & $-1/4$ \\
     Face & 3000 & CRF 32 & 1.0058 & $-1/5$ \\
     Cloth & 2696 & CRF 32 & 1.0029 & $-1/10$ \\
     \bottomrule
   \end{tabularx}
-  \vspace{0.25em}
-  {\scriptsize HEVC: \texttt{libx265}, preset \texttt{medium}. Baseline идет без ROI side data; ROI-aware получает side data через \texttt{addroi}.}
+  \vspace{1.00em}
+  {\scriptsize\linespread{1.18}\selectfont HEVC: \texttt{libx265}, preset \texttt{medium}. Baseline кодируется без ROI side data; ROI-aware ветка получает \texttt{AVRegionOfInterest} через \texttt{addroi}.\par}
 \end{columns}
-\sectionnote{Global оценивает весь кадр, ROI-crop — кропы ROI, Background показывает цену перераспределения качества при фиксированном размере.}
+\sectionnote{Global агрегирует весь кадр, ROI-crop измеряет защищаемую область, Background оценивает цену перераспределения качества при фиксированном размере потока.}
 \end{frame}
 
 \begin{frame}
 \frametitle{Результаты: локальное качество ROI}
-\framesubtitle{Text и Face дают сильный эффект; Cloth положителен, но сложнее}
+\framesubtitle{Наибольший выигрыш наблюдается для Text и Face ROI}
 \scriptsize
 \begin{center}
-  \includegraphics[width=0.84\linewidth]{video-quality/roi_crop_effects.png}
+  \includegraphics[width=0.92\linewidth]{video-quality/roi_crop_effects.png}
 \end{center}
-\figcap{ROI-crop improvement: качество измеряется внутри кропов областей интереса.}
-\sectionnote{\textbf{Численно:} Text +3.331 dB / +4.451 VMAF; Face +3.284 dB / +5.857 VMAF; Cloth +0.547 dB / +0.449 VMAF. Positive share: 0.90--1.00.}
+\figcap{ROI-crop improvement: качество измеряется внутри локализованных областей интереса, а не усредняется по всей площади кадра.}
+\sectionnote{\textbf{Основной результат:} Text +3.331 dB / +4.451 VMAF; Face +3.284 dB / +5.857 VMAF; Cloth +0.547 dB / +0.449 VMAF. Доля положительных наблюдений: 0.90--1.00.}
 \end{frame}
 
 \begin{frame}
-\frametitle{Результаты: цена перераспределения}
-\framesubtitle{Фон ухудшается контролируемо, потому что общий размер почти фиксирован}
+\frametitle{Результаты: эффект перераспределения}
+\framesubtitle{Фоновая деградация является ожидаемой ценой фиксированного битового бюджета}
 \scriptsize
 \begin{center}
-  \includegraphics[width=0.80\linewidth]{video-quality/roi_background_tradeoff.png}
+  \includegraphics[width=0.92\linewidth]{video-quality/roi_background_tradeoff.png}
 \end{center}
-\figcap{ROI-only PSNR растет, background PSNR снижается: это ожидаемый эффект фиксированного бюджета.}
-\sectionnote{\textbf{Вывод:} global/background-метрики фиксируют цену перераспределения, но ROI-weighted PSNR остается положительным для всех трех типов ROI.}
+\figcap{Рост ROI-only PSNR сопровождается снижением background PSNR, что соответствует перераспределению качества при фиксированном размере.}
+\sectionnote{\textbf{Интерпретация:} global/background-метрики фиксируют цену перераспределения, однако ROI-weighted PSNR остается положительным для всех трех типов ROI.}
 \end{frame}
 
 \begin{frame}
 \frametitle{Ограничения и дальнейшая работа}
-\framesubtitle{Что доказано сейчас и что требуется для production-video}
+\framesubtitle{Верифицированный контур и границы переноса на потоковое видео}
 \footnotesize
 \begin{columns}[T,onlytextwidth]
   \column{0.48\textwidth}
-  \begin{block}{Подтверждено}
+  \begin{block}{Верифицировано}
     \begin{itemize}
-      \item IDet формирует ROI в реалистичном CPU-бюджете для отдельных веток.
-      \item YOLO26n является рациональным lightweight-кандидатом для Cloth ROI.
-      \item ROI side data через \texttt{addroi}/\texttt{libx265} дает устойчивый локальный выигрыш на FHD-кадрах.
-      \item Size ratio около 1.0 исключает объяснение результата ростом файла.
+      \item IDet формирует ROI в CPU-бюджете отдельных веток.
+      \item YOLO26n выбран как легкая модель для textured ROI.
+      \item \texttt{addroi}/\texttt{libx265} дает локальный выигрыш на FHD-кадрах.
+      \item Size ratio около 1.0 исключает рост потока как источник выигрыша.
     \end{itemize}
   \end{block}
   \column{0.49\textwidth}
-  \begin{alertblock}{Не закрыто в рамках ВКР}
+  \begin{alertblock}{За пределами покадрового эксперимента}
     \begin{itemize}
-      \item temporal smoothing и tracking ROI между кадрами;
-      \item GOP-aware настройка и межкадровое предсказание;
-      \item end-to-end live latency вместе с кодировщиком и сетью;
-      \item планировщик частоты запуска трех ROI-веток.
+      \item сглаживание и tracking ROI во времени;
+      \item GOP-aware настройка межкадрового предсказания;
+      \item сквозная latency live-контура с кодировщиком и сетью;
+      \item планировщик запуска трех ROI-веток;
+      \item I/O Binding и NUMA-настройки на целевой инфраструктуре.
     \end{itemize}
   \end{alertblock}
   \begin{block}{Следующий шаг}
-    Перенести покадровый результат на видеокорпус: стабилизировать ROI во времени, измерить flicker/битрейт/latency и сравнить с production baseline.
+    Проверить на видеокорпусе: стабильность ROI, мерцание качества, битрейт, задержку и сравнение с промышленным baseline.
   \end{block}
 \end{columns}
 \end{frame}
@@ -348,22 +373,22 @@
   \begin{center}
     \begin{minipage}{0.88\linewidth}
       \centering
-      ROI-aware слой не заменяет ABR и rate-control, а добавляет кодировщику пространственный управляющий сигнал.
-      При почти неизменном размере потока качество управляемо перераспределяется к областям, где цена артефактов выше.
+	      Работа верифицирует воспроизводимый путь от аудита датасетов и ML-детектора к CPU-исполнению, ROI side data и HEVC-кодированию.
+		      ROI-aware слой не заменяет ABR и rate-control, а вводит дополнительный пространственный управляющий сигнал для перераспределения битового бюджета.
     \end{minipage}
   \end{center}
   \vspace{0.9em}
   \begin{columns}[T,onlytextwidth]
     \column{0.31\textwidth}
-      \metric{Engineering}{IDet возвращает ROI-геометрию в CPU-бюджете.}
+			      \metric{Исполнение}{IDet формирует ROI-геометрию в CPU-бюджете и сохраняет границу API.}
     \column{0.31\textwidth}
-      \metric{ML}{YOLO26n выбран как lightweight textured ROI detector.}
+			      \metric{Выбор модели}{YOLO26n выбран после аудита данных, mAP/GFLOPs анализа и ONNX-экспорта.}
     \column{0.31\textwidth}
-      \metric{Video quality}{Text, Face и Cloth ROI получают локальный выигрыш.}
+			      \metric{Кодирование}{ROI-aware HEVC дает локальный выигрыш при size ratio около 1.0.}
   \end{columns}
   \vspace{1.0em}
-  \begin{alertblock}{Главная формулировка}
-    Качество не «становится лучше везде». Оно перераспределяется туда, где пользователь сильнее замечает деградацию: текст, лица и визуально насыщенные фактуры.
+	  \begin{alertblock}{Итоговый тезис}
+	    Подтвержден не глобальный рост качества, а управляемый локальный выигрыш ROI при фиксированной HEVC-конфигурации и сопоставимом размере потока.
   \end{alertblock}
 \end{frame}
 
@@ -373,9 +398,6 @@
     \includegraphics[width=0.15\textwidth]{hse-theme/hse-logo-mark}\\[1.2em]
     {\color{HSEblue}\fontsize{25}{29}\selectfont\bfseries Спасибо за внимание}\\[0.9em]
     {\large Готов ответить на вопросы}\\[2.0em]
-    {\footnotesize Даниил Денисович Паршин\\
-    НИУ ВШЭ, Нижний Новгород\\
-    2026}
   \end{center}
 \end{frame}
 
