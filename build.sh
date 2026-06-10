@@ -13,16 +13,15 @@ usage() {
 Usage: ./build.sh [target]
 
 Targets:
-  diploma                 Build docs/diploma.pdf and docs/diploma_compressed.pdf (default).
-  diploma-pdf             Build docs/diploma.pdf without compression.
-  diploma-compressed      Build docs/diploma.pdf and docs/diploma_compressed.pdf.
-  presentation            Build docs/presentation.pdf.
-  presentation-compressed Build docs/presentation.pdf and docs/presentation_compressed.pdf.
-  all                     Build diploma with compression and docs/presentation.pdf.
-  all-compressed          Build diploma and presentation, both with compressed copies.
-  help                    Show this message.
+  diploma  Build docs/diploma.pdf and docs/diploma_compressed.pdf (default).
+  presa    Build docs/presentation.pdf and docs/presentation_compressed.pdf.
+  all      Build both documents and compressed copies.
+  help     Show this message.
 
-Set COMPRESS_PDF=0 to skip compression even for compressed targets.
+Compression is attempted for every target when Ghostscript is available.
+Set COMPRESS_PDF=0 to skip compression:
+  COMPRESS_PDF=0 ./build.sh presa
+
 LaTeX auxiliary files are written to artefacts/.
 Ready PDFs are written to docs/.
 USAGE
@@ -160,7 +159,6 @@ compress_pdf() {
 
 build_doc() {
   local doc_name="$1"
-  local with_compression="$2"
   local tex_file="${doc_name}.tex"
   local pdf_file="${doc_name}.pdf"
   local artefact_pdf="${LATEX_ARTEFACTS_DIR}/${pdf_file}"
@@ -189,34 +187,19 @@ build_doc() {
   cp -f "${artefact_pdf}" "${published_pdf}"
   validate_pdf "${published_pdf}" "${pdf_file}" pages
 
-  if [[ "${with_compression}" == "1" ]]; then
-    compress_pdf "${doc_name}" "${pages}"
-  fi
+  compress_pdf "${doc_name}" "${pages}"
 }
 
 case "${TARGET}" in
   diploma|default)
-    build_doc "diploma" "1"
+    build_doc "diploma"
     ;;
-  diploma-pdf)
-    build_doc "diploma" "0"
-    ;;
-  diploma-compressed|compressed)
-    build_doc "diploma" "1"
-    ;;
-  presentation)
-    build_doc "presentation" "0"
-    ;;
-  presentation-compressed)
-    build_doc "presentation" "1"
+  presa)
+    build_doc "presentation"
     ;;
   all)
-    build_doc "diploma" "1"
-    build_doc "presentation" "0"
-    ;;
-  all-compressed)
-    build_doc "diploma" "1"
-    build_doc "presentation" "1"
+    build_doc "diploma"
+    build_doc "presentation"
     ;;
   help|-h|--help)
     usage

@@ -69,22 +69,19 @@ docs/diploma.pdf
 docs/diploma_compressed.pdf
 ```
 
-Build targets:
+Build modes:
 
 ```bash
-./build.sh                         # docs/diploma.pdf + docs/diploma_compressed.pdf
-./build.sh diploma-pdf             # docs/diploma.pdf only
-./build.sh diploma-compressed      # docs/diploma.pdf + docs/diploma_compressed.pdf
-./build.sh presentation            # docs/presentation.pdf
-./build.sh presentation-compressed # docs/presentation.pdf + docs/presentation_compressed.pdf
-./build.sh all                     # diploma with compression + docs/presentation.pdf
-./build.sh all-compressed          # diploma and presentation, both with compressed copies
+./build.sh         # diploma mode: docs/diploma.pdf + docs/diploma_compressed.pdf
+./build.sh diploma # same as default
+./build.sh presa   # docs/presentation.pdf + docs/presentation_compressed.pdf
+./build.sh all     # diploma and presentation, both with compressed copies
 ```
 
-If Ghostscript is unavailable, compressed targets still build the regular PDF and print a warning. Disable compression explicitly with:
+Compression is attempted for every build mode when Ghostscript is available. If Ghostscript is unavailable, the regular PDF is still built and the script prints a warning. Disable compression explicitly with:
 
 ```bash
-COMPRESS_PDF=0 ./build.sh
+COMPRESS_PDF=0 ./build.sh presa
 ```
 
 ## Dependencies
